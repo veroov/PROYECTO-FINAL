@@ -81,8 +81,8 @@ class ImagenMedica:
         else:
             print("Esta carpeta ya estaba registrada.")
 
+#Devuelve el volumen 3D
     def reconstruccion_volumen(self):
-        """Devuelve el volumen 3D"""
         if self.volumen is None:
             self.cargar_dicoms()
         return self.volumen
