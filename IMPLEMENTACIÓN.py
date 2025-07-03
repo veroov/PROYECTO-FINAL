@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-from Trabajo_final import Usuario
+from TRABAJO_FINAL import Usuario
 
 client = MongoClient("mongodb://localhost:27017/")
 db = client["Bioingenieria"]
