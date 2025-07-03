@@ -63,21 +63,17 @@ class ImagenMedica:
         if not self.dicoms:
             self.cargar_dicoms()
         dcm = self.dicoms[0]
-        return {
-            "Nombre": str(dcm.get("PatientName", "Desconocido")),
+        return { "Nombre": str(dcm.get("PatientName", "Desconocido")),
             "Edad": str(dcm.get("PatientAge", "ND")),
             "ID": str(dcm.get("PatientID", "ND")),
             "Fecha": str(dcm.get("StudyDate", "ND")),
-            "Modalidad": str(dcm.get("Modality", "ND")),
-        }
+            "Modalidad": str(dcm.get("Modality", "ND")), }
 
 #Guarda metadatos y ruta en Mongo
     def guardar_en_mongo(self, ruta_nifti=None):
         datos = self.metadatos()
-        datos.update({
-            "carpeta_dicom": self.carpeta,
-            "ruta_nifti": ruta_nifti
-        })
+        datos.update({ "carpeta_dicom": self.carpeta,
+            "ruta_nifti": ruta_nifti})
 
         if not self.coleccion.find_one({"carpeta_dicom": self.carpeta}):
             self.coleccion.insert_one(datos)
