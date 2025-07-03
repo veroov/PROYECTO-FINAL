@@ -2,7 +2,7 @@ from pymongo import MongoClient
 from Trabajo_final import Usuario
 
 client = MongoClient("mongodb://localhost:27017/")
-db = client["Base-trabajo"]
+db = client["Bioingenieria"]
 coleccion_usuarios = db["Usuarios"]
 
 username = input("Ingrese su nombre de usuario: ")
