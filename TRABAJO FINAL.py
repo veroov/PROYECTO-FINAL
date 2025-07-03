@@ -27,4 +27,4 @@ class Usuario:
         return False, "datos incorrectos."
     
     def __str__(self):
-        return f"bienvenido usuario {self.usuario}, usted es experto en {self.rol}"
+        return f"bienvenido usuario {self.usuario}, usted es experto en {self.rol}" 
