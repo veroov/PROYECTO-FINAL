@@ -1,0 +1,71 @@
+import sys
+import pandas as pd
+from PyQt5.QtWidgets import (
+    QApplication, QWidget, QVBoxLayout, QPushButton, QFileDialog,
+    QTableWidget, QTableWidgetItem, QComboBox, QLabel, QHBoxLayout
+)
+import matplotlib.pyplot as plt
+
+class CSVApp(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Lector CSV y gráfico scatter")
+        self.df = None
+        
+        self.layout = QVBoxLayout()
+
+        self.btn_cargar = QPushButton("Cargar CSV")
+        self.btn_cargar.clicked.connect(self.cargar_csv)
+        self.layout.addWidget(self.btn_cargar)
+
+        self.combo_x = QComboBox()
+        self.combo_y = QComboBox()
+        self.layout.addWidget(QLabel("Columna X:"))
+        self.layout.addWidget(self.combo_x)
+        self.layout.addWidget(QLabel("Columna Y:"))
+        self.layout.addWidget(self.combo_y)
+
+        self.btn_graficar = QPushButton("Graficar Scatter")
+        self.btn_graficar.clicked.connect(self.graficar)
+        self.layout.addWidget(self.btn_graficar)
+
+        self.tabla = QTableWidget()
+        self.layout.addWidget(self.tabla)
+
+        self.setLayout(self.layout)
+
+    def cargar_csv(self):
+        ruta, _ = QFileDialog.getOpenFileName(self, "Selecciona un archivo CSV", "", "CSV files (*.csv)")
+        if ruta:
+            self.df = pd.read_csv(ruta)
+            self.mostrar_en_tabla()
+            self.combo_x.addItems(self.df.columns)
+            self.combo_y.addItems(self.df.columns)
+
+    def mostrar_en_tabla(self):
+        self.tabla.setRowCount(len(self.df))
+        self.tabla.setColumnCount(len(self.df.columns))
+        self.tabla.setHorizontalHeaderLabels(self.df.columns)
+
+        for i in range(len(self.df)):
+            for j in range(len(self.df.columns)):
+                item = QTableWidgetItem(str(self.df.iat[i, j]))
+                self.tabla.setItem(i, j, item)
+
+    def graficar(self):
+        x = self.combo_x.currentText()
+        y = self.combo_y.currentText()
+        if self.df is not None and x and y:
+            plt.scatter(self.df[x], self.df[y])
+            plt.xlabel(x)
+            plt.ylabel(y)
+            plt.title("Gráfico de dispersión")
+            plt.grid(True)
+            plt.show()
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    ventana = CSVApp()
+    ventana.resize(800, 600)
+    ventana.show()
+    sys.exit(app.exec_())
