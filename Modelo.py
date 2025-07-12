@@ -25,7 +25,8 @@ class Usuario:
         self.coleccion.insert_one({
             "usuario": self.usuario,
             "contraseña": self.contraseña,
-            "rol": self.rol
+            "rol": self.rol,
+            "nombre": nombre
         })
         return True, "Usuario registrado exitosamente."
 

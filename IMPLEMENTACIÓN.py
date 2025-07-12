@@ -1,6 +1,6 @@
 from pymongo import MongoClient
-from TRABAJO_FINAL import Usuario
-from TRABAJO_FINAL import ImagenMedica
+from Controlador import Usuario
+from Controlador import ImagenMedica
 
 client = MongoClient("mongodb://localhost:27017/")
 db = client["Bioingenieria"]
