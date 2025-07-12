@@ -14,10 +14,18 @@ class Usuario:
     def guardar(self):
         if self.coleccion.find_one({"usuario": self.usuario}):
             return False, "El usuario ya existe."
+        if self.rol == "imagenes":
+            nombre = f"Usuario imágenes - {self.usuario}"
+        elif self.rol == "señales":
+            nombre = f"Usuario señales - {self.usuario}"
+        else:
+            nombre = self.usuario 
+
         self.coleccion.insert_one({
             "usuario": self.usuario,
             "contraseña": self.contraseña,
-            "rol": self.rol
+            "rol": self.rol,
+            "nombre": nombre
         })
         return True, "Usuario registrado exitosamente."
 
