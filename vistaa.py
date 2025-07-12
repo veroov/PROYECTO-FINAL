@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (
     QVBoxLayout, QMessageBox, QComboBox, QFileDialog, QTableWidget, QTableWidgetItem
 )
 from pymongo import MongoClient
-from Controlador import Usuario, ImagenMedica
+from Modelo import Usuario, ImagenMedica
 import sys
 import pandas as pd
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
