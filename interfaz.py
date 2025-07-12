@@ -1,7 +1,14 @@
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,QVBoxLayout, QMessageBox, QComboBox)
+from PyQt5.QtWidgets import (
+    QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
+    QVBoxLayout, QMessageBox, QComboBox, QFileDialog, QTableWidget, QTableWidgetItem
+)
 from pymongo import MongoClient
 from TRABAJO_FINAL import Usuario, ImagenMedica
 import sys
+import pandas as pd
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+from PyQt5.QtCore import Qt
 
 #Conexión global a MongoDB
 client = MongoClient("mongodb://localhost:27017/")
@@ -16,20 +23,41 @@ class ImagenMenu(QMainWindow):
         self.setWindowTitle("Menú - Imágenes")
         self.setGeometry(200, 200, 400, 300)
 
-        layout = QVBoxLayout()
-        layout.addWidget(QLabel("Bienvenido, experto en imágenes.\nCarga automática de imágenes DICOM realizada."))
+        self.layout = QVBoxLayout()
 
-        imagen = ImagenMedica("img1", coleccion_dicom)
-        imagen.cargar_dicoms()
-        metadatos = imagen.metadatos()
-        imagen.guardar_en_mongo()
+        self.btn_cargar = QPushButton("Seleccionar carpeta DICOM")
+        self.btn_cargar.clicked.connect(self.seleccionar_carpeta)
+        self.layout.addWidget(self.btn_cargar)
 
-        for clave, valor in metadatos.items():
-            layout.addWidget(QLabel(f"{clave}: {valor}"))
+        self.widget = QWidget()
+        self.widget.setLayout(self.layout)
+        self.setCentralWidget(self.widget)
 
-        widget = QWidget()
-        widget.setLayout(layout)
-        self.setCentralWidget(widget)
+    def seleccionar_carpeta(self):
+        carpeta = QFileDialog.getExistingDirectory(self, "Seleccionar carpeta DICOM")
+
+        if carpeta:
+            try:
+                imagen = ImagenMedica(carpeta, coleccion_dicom)
+                imagen.cargar_dicoms()
+                imagen.guardar_en_mongo()
+                metadatos = imagen.metadatos()
+
+                self.btn_cargar.hide()
+
+                # Limpiar widgets anteriores 
+                while self.layout.count() > 1:
+                    widget = self.layout.itemAt(1).widget()
+                    if widget:
+                        self.layout.removeWidget(widget)
+                        widget.deleteLater()
+
+                # Mostrar los metadatos nuevos
+                for clave, valor in metadatos.items():
+                    self.layout.addWidget(QLabel(f"{clave}: {valor}"))
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"No se pudo cargar la carpeta:\n{e}")
+
 
 # Menú para expertos en señales
 class SeñalMenu(QMainWindow):
@@ -39,26 +67,41 @@ class SeñalMenu(QMainWindow):
         self.setGeometry(200, 200, 400, 200)
 
         layout = QVBoxLayout()
-        layout.addWidget(QLabel("Bienvenido, experto en señales.\nAquí irán herramientas de análisis de señales."))
+
+        btn_csv = QPushButton("Visualizar CSV")
+        btn_csv.clicked.connect(self.abrir_csv_view)
+        layout.addWidget(btn_csv)
 
         widget = QWidget()
         widget.setLayout(layout)
         self.setCentralWidget(widget)
 
+    def abrir_csv_view(self):
+        self.csv_view = CSVView()
+        self.csv_view.show()
 #Ventana principal 
 class LoginWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("aun no tiene nombre")
+        self.setStyleSheet("""
+    QWidget { background: white; font-family: Arial; font-size: 14px; }
+    QPushButton {background: #4da6ff; color: white; border-radius: 5px; padding: 6px;}
+    QPushButton:hover { background: #3399ff; }
+    QLineEdit, QComboBox { border: 1px solid lightgray; border-radius: 4px; padding: 4px;}""")
         self.setGeometry(150, 150, 300, 300)
 
         self.layout = QVBoxLayout()
+        self.layout.setSpacing(10)
+        self.layout.setContentsMargins(20, 20, 20, 20)
         self.setLayout(self.layout)
-
         self.mostrar_opciones_iniciales()
 
     def mostrar_opciones_iniciales(self):
-        self.layout.addWidget(QLabel("Bienvenido a ..."))
+        titulo = QLabel("Bienvenido a ...")
+        titulo.setStyleSheet("font-size: 20px; font-weight: bold; color: #2c3e50;")
+        titulo.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(titulo)
         self.btn_login = QPushButton("Iniciar Sesión")
         self.btn_login.clicked.connect(self.mostrar_login)
 
@@ -70,7 +113,7 @@ class LoginWindow(QWidget):
 
     def mostrar_login(self):
         self.limpiar_layout()
-
+     
         self.layout.addWidget(QLabel("Usuario:"))
         self.input_usuario = QLineEdit()
         self.layout.addWidget(self.input_usuario)
@@ -172,6 +215,7 @@ class CSVView(QWidget):
         self.layout = QVBoxLayout()
 
         self.btn_cargar = QPushButton("Cargar CSV")
+        self.btn_cargar.clicked.connect(self.cargar_csv)
         self.layout.addWidget(self.btn_cargar)
 
         self.combo_x = QComboBox()
@@ -182,12 +226,91 @@ class CSVView(QWidget):
         self.layout.addWidget(self.combo_y)
 
         self.btn_graficar = QPushButton("Graficar Scatter")
+        self.btn_graficar.clicked.connect(self.graficar)
         self.layout.addWidget(self.btn_graficar)
+
+        self.btn_limpiar = QPushButton("Limpiar gráfico")
+        self.btn_limpiar.clicked.connect(self.limpiar_grafico)
+        self.layout.addWidget(self.btn_limpiar)
 
         self.tabla = QTableWidget()
         self.layout.addWidget(self.tabla)
 
+        self.figure = Figure(figsize=(5, 3))
+        self.canvas = FigureCanvas(self.figure)
+        self.layout.addWidget(self.canvas)
+
         self.setLayout(self.layout)
+
+        self.df = None
+
+    
+    def cargar_csv(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Seleccionar CSV", "", "CSV Files (*.csv)")
+        if not file_path:
+            return
+
+        try:
+            self.df = pd.read_csv(file_path)
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"No se pudo cargar el archivo:\n{e}")
+            return
+
+        self.mostrar_tabla()
+        self.llenar_combos()
+
+    def mostrar_tabla(self):
+        if self.df is None:
+            return
+
+        self.tabla.setRowCount(len(self.df))
+        self.tabla.setColumnCount(len(self.df.columns))
+        self.tabla.setHorizontalHeaderLabels(self.df.columns)
+
+        for i in range(len(self.df)):
+            for j in range(len(self.df.columns)):
+                valor = str(self.df.iat[i, j])
+                self.tabla.setItem(i, j, QTableWidgetItem(valor))
+
+    def llenar_combos(self):
+        self.combo_x.clear()
+        self.combo_y.clear()
+
+        columnas = list(self.df.columns)
+        self.combo_x.addItems(columnas)
+        self.combo_y.addItems(columnas)
+
+    def graficar(self):
+        if self.df is None:
+            QMessageBox.warning(self, "Advertencia", "Primero debes cargar un archivo CSV.")
+            return
+
+        x_col = self.combo_x.currentText()
+        y_col = self.combo_y.currentText()
+
+        if not x_col or not y_col:
+            QMessageBox.warning(self, "Advertencia", "Selecciona columnas X e Y.")
+            return
+
+        try:
+            x = self.df[x_col]
+            y = self.df[y_col]
+
+            self.figure.clear()  # Limpiar gráfica anterior
+            ax = self.figure.add_subplot(111)
+            ax.scatter(x, y)
+            ax.set_xlabel(x_col)
+            ax.set_ylabel(y_col)
+            ax.set_title("Gráfico de Dispersión")
+            ax.grid(True)
+            self.canvas.draw()
+
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"No se pudo graficar:\n{e}")
+
+    def limpiar_grafico(self):
+        self.figure.clear()
+        self.canvas.draw()
 
 #Ejecutar la app 
 if __name__ == "__main__":
