@@ -1,3 +1,5 @@
+import pandas as pd
+
 class GestorBaseDatos:
     def __init__(self, tipo="sql"):
         pass  # conecta con MongoDB o SQLite
@@ -47,12 +49,26 @@ class GestorSenales:
         pass
 #####
 class GestorCSV:
+  def __init__(self):
+        self.csv = None
+
     def cargar_csv(self, ruta):
-        pass
+        self.csv = pd.read_csv(ruta)
+        return self.csv
 
     def obtener_columnas(self):
-        pass
+        return list(self.csv.columns) if self.csv is not None else []
 
-    def graficar_dispersion(self, col1, col2):
-        pass
+    def obtener_datos(self):
+        return self.csv
+
+    def graficar_dispersion(self, col_x, col_y, plt):
+        if self.csv is not None:
+            plt.scatter(self.df[col_x], self.df[col_y])
+            plt.xlabel(col_x)
+            plt.ylabel(col_y)
+            plt.title("Gráfico de dispersión")
+            plt.grid(True)
+
+      
 #####
