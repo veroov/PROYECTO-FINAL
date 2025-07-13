@@ -1,4 +1,5 @@
 import pydicom
+from datetime import datetime
 import os
 import numpy as np
 from pymongo.collection import Collection
@@ -102,7 +103,47 @@ class ImagenMedica:
         elif eje == 2:  # Plano Sagital
             return self.volumen[:, :, indice]
         return None
-    
+class ProcesadorImagen:
+    def __init__(self, ruta):
+        self.ruta = ruta
+        self.original = cv2.imread(ruta, cv2.IMREAD_COLOR)
+        self.procesada = self.original.copy()
+
+    def cambiar_espacio_color(self, modo="gris"):
+        if modo == "gris":
+            self.procesada = cv2.cvtColor(self.original, cv2.COLOR_BGR2GRAY)
+        elif modo == "hsv":
+            self.procesada = cv2.cvtColor(self.original, cv2.COLOR_BGR2HSV)
+        return self.procesada
+
+    def ecualizar(self):
+        gris = cv2.cvtColor(self.original, cv2.COLOR_BGR2GRAY)
+        self.procesada = cv2.equalizeHist(gris)
+        return self.procesada
+
+    def binarizar(self, umbral=127):
+        gris = cv2.cvtColor(self.original, cv2.COLOR_BGR2GRAY)
+        _, self.procesada = cv2.threshold(gris, umbral, 255, cv2.THRESH_BINARY)
+        return self.procesada
+
+    def operacion_morfologica(self, tipo="apertura", tam_kernel=5):
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (tam_kernel, tam_kernel))
+        binaria = self.binarizar()
+        if tipo == "apertura":
+            self.procesada = cv2.morphologyEx(binaria, cv2.MORPH_OPEN, kernel)
+        elif tipo == "cierre":
+            self.procesada = cv2.morphologyEx(binaria, cv2.MORPH_CLOSE, kernel)
+        return self.procesada
+
+    def contar_celulas(self):
+        gris = cv2.cvtColor(self.original, cv2.COLOR_BGR2GRAY)
+        _, binaria = cv2.threshold(gris, 127, 255, cv2.THRESH_BINARY_INV)
+        contornos, _ = cv2.findContours(binaria, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        return len(contornos)
+    def invertir_imagen(self):
+        self.procesada = cv2.bitwise_not(self.original)
+        return self.procesada
+        
 class GestorSeñales:
     def __init__(self):
         self.datos_mat = {}
@@ -145,3 +186,27 @@ class GestorCSV:
         if self.df is not None and col_x in self.df.columns and col_y in self.df.columns:
             return self.df[col_x], self.df[col_y]
         return None, None
+
+class RegistroArchivo:
+    def __init__(self, tipo, nombre_archivo, ruta, coleccion):
+        self.tipo = tipo  # Ej: "csv", "mat", "jpg"
+        self.nombre_archivo = nombre_archivo
+        self.ruta = ruta
+        self.fecha = datetime.now()
+        self.coleccion = coleccion
+
+    def guardar(self):
+        doc = {
+            "codigo": self.generar_codigo(),
+            "tipo": self.tipo,
+            "nombre_archivo": self.nombre_archivo,
+            "fecha": self.fecha,
+            "ruta": self.ruta
+        }
+        self.coleccion.insert_one(doc)
+
+    def generar_codigo(self):
+        # Código simple tipo: CSV-00001, MAT-00002, etc.
+        prefijo = self.tipo.upper()
+        total = self.coleccion.count_documents({"tipo": self.tipo}) + 1
+        return f"{prefijo}-{total:05d}"
