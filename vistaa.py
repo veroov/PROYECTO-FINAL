@@ -44,6 +44,10 @@ class ImagenMenu(QMainWindow):
         # .addWidget() es el comando para añadir un componente (como un botón) a un layout.
         self.layout_controles.addWidget(self.btn_cargar)
 
+        self.btn_png = QPushButton("Mostrar imagen PNG")
+        self.btn_png.clicked.connect(self.mostrar_imagen_png)
+        self.layout_controles.addWidget(self.btn_png)
+
         self.info_label = QLabel("Por favor, cargue una carpeta DICOM para comenzar.")
         self.info_label.setWordWrap(True)
         self.layout_controles.addWidget(self.info_label)
@@ -148,6 +152,21 @@ class ImagenMenu(QMainWindow):
             self.ax.axis('off')
             # canvas.draw() actualiza el lienzo, haciendo que el nuevo gráfico sea visible en la interfaz.
             self.canvas.draw()
+    def mostrar_imagen_png(self):
+        ruta_imagen, _ = QFileDialog.getOpenFileName(self, "Seleccionar imagen PNG", "", "Imágenes (*.png)")
+        if not ruta_imagen:
+            return
+
+        imagen = cv2.imread(ruta_imagen, cv2.IMREAD_GRAYSCALE)
+        if imagen is None:
+            QMessageBox.critical(self, "Error", "No se pudo cargar la imagen.")
+            return
+
+        self.ax.clear()
+        self.ax.imshow(imagen, cmap='gray')
+        self.ax.set_title("Imagen PNG Cargada")
+        self.ax.axis('off')
+        self.canvas.draw()
 
 class SeñalMenu(QMainWindow):
     def __init__(self):
@@ -165,10 +184,6 @@ class SeñalMenu(QMainWindow):
         self.btn_csv.clicked.connect(self.abrir_csv_view)
         self.layout.addWidget(self.btn_csv)
 
-        self.btn_visualizador = QPushButton("Abrir visualizador interactivo (Simple)")
-        self.btn_visualizador.clicked.connect(self.abrir_visualizador)
-        self.layout.addWidget(self.btn_visualizador)
-
         widget = QWidget()
         widget.setLayout(self.layout)
         self.setCentralWidget(widget)
@@ -180,10 +195,6 @@ class SeñalMenu(QMainWindow):
     def abrir_mat_viewer(self):
         self.mat_viewer = MatViewer()
         self.mat_viewer.show()
-
-    def abrir_visualizador(self):
-        self.visualizador = VisualizadorInteractivo()
-        self.visualizador.show()
 class MatViewer(QWidget):
     def __init__(self):
         super().__init__()
@@ -336,62 +347,6 @@ class CSVView(QWidget):
             self.canvas.draw()
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo graficar:\n{e}")
-
-class VisualizadorInteractivo(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("Visualizador Interactivo - GenEraVid")
-        self.setGeometry(100, 100, 800, 600)
-        self.canvas = FigureCanvas(Figure(figsize=(5, 3)))
-        layout = QVBoxLayout()
-        layout.addWidget(self.canvas)
-        self.btn_imagen = QPushButton("Mostrar Imagen PNG")
-        self.btn_imagen.clicked.connect(self.mostrar_imagen)
-        self.btn_senal = QPushButton("Mostrar Señal")
-        self.btn_senal.clicked.connect(self.mostrar_senal)
-        self.btn_csv = QPushButton("Mostrar Gráfico CSV")
-        self.btn_csv.clicked.connect(self.mostrar_csv)
-        layout.addWidget(self.btn_imagen)
-        layout.addWidget(self.btn_senal)
-        layout.addWidget(self.btn_csv)
-        self.setLayout(layout)
-    def mostrar_imagen(self):
-        ax = self.canvas.figure.subplots()
-        ax.clear()
-        img = cv2.imread("Cromo.png", cv2.IMREAD_GRAYSCALE)
-        if img is None:
-            ax.text(0.5, 0.5, "No se encontró la imagen 'Cromo.png'", ha='center')
-        else:
-            ax.imshow(img, cmap='gray')
-            ax.set_title("Imagen PNG: Cromosomas")
-        self.canvas.draw()
-    def mostrar_senal(self):
-        ax = self.canvas.figure.subplots()
-        ax.clear()
-        t = np.linspace(0, 1, 500)
-        senal = np.sin(2 * np.pi * 10 * t)
-        ax.plot(t, senal, label="Señal simulada")
-        ax.set_title("Señal Simulada - Senoidal")
-        ax.set_xlabel("Tiempo [s]")
-        ax.set_ylabel("Amplitud")
-        ax.legend()
-        self.canvas.draw()
-    def mostrar_csv(self):
-        ax = self.canvas.figure.subplots()
-        ax.clear()
-        try:
-            df = pd.read_csv("pacientes.csv") # Asegúrate que 'pacientes.csv' exista
-            conteo = df["Grupo"].value_counts()
-            ax.bar(conteo.index, conteo.values, color=['#1f77b4', '#ff7f0e', '#2ca02c'])
-            ax.set_title("Distribución de Pacientes por Grupo")
-            ax.set_xlabel("Grupo")
-            ax.set_ylabel("Cantidad de Pacientes")
-        except FileNotFoundError:
-            ax.text(0.5, 0.5, "No se encontró el archivo 'pacientes.csv'", ha='center')
-        except Exception as e:
-            ax.text(0.5, 0.5, f"Error al leer CSV: {e}", ha='center')
-        self.canvas.draw()
-
 class LoginWindow(QWidget):
     def __init__(self):
         super().__init__()

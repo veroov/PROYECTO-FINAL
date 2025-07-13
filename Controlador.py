@@ -1,6 +1,8 @@
+import os
+from datetime import datetime
 import matplotlib.pyplot as plt
-from PyQt5.QtWidgets import QFileDialog
-from Modelo import GestorCSV
+from PyQt5.QtWidgets import QFileDialog, QTableWidgetItem
+from Modelo import GestorCSV, RegistroArchivo, coleccion_archivos
 
 class CSVControlador:
     def __init__(self, vista):
@@ -22,6 +24,11 @@ class CSVControlador:
             self.vista.combo_x.addItems(columnas)
             self.vista.combo_y.addItems(columnas)
             self.mostrar_tabla()
+
+            # REGISTRO EN MONGODB
+            nombre = os.path.basename(ruta)
+            registro = RegistroArchivo("csv", nombre, ruta, coleccion_archivos)
+            registro.guardar()
 
     def mostrar_tabla(self):
         df = self.modelo.obtener_datos()
