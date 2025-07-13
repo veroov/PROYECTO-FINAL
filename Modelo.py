@@ -1,4 +1,5 @@
 import pydicom
+from datetime import datetime
 import os
 import numpy as np
 from pymongo.collection import Collection
@@ -185,3 +186,27 @@ class GestorCSV:
         if self.df is not None and col_x in self.df.columns and col_y in self.df.columns:
             return self.df[col_x], self.df[col_y]
         return None, None
+
+class RegistroArchivo:
+    def __init__(self, tipo, nombre_archivo, ruta, coleccion):
+        self.tipo = tipo  # Ej: "csv", "mat", "jpg"
+        self.nombre_archivo = nombre_archivo
+        self.ruta = ruta
+        self.fecha = datetime.now()
+        self.coleccion = coleccion
+
+    def guardar(self):
+        doc = {
+            "codigo": self.generar_codigo(),
+            "tipo": self.tipo,
+            "nombre_archivo": self.nombre_archivo,
+            "fecha": self.fecha,
+            "ruta": self.ruta
+        }
+        self.coleccion.insert_one(doc)
+
+    def generar_codigo(self):
+        # Código simple tipo: CSV-00001, MAT-00002, etc.
+        prefijo = self.tipo.upper()
+        total = self.coleccion.count_documents({"tipo": self.tipo}) + 1
+        return f"{prefijo}-{total:05d}"
