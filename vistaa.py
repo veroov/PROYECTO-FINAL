@@ -150,8 +150,8 @@ class SeñalMenu(QMainWindow):
         self.ax = self.canvas.figure.add_subplot(111)
         self.layout.addWidget(self.canvas)
         
-        self.btn_mat = QPushButton("Cargar archivo .mat")
-        self.btn_mat.clicked.connect(self.cargar_archivo_mat)
+        self.btn_mat = QPushButton("Abrir visualizador .mat")
+        self.btn_mat.clicked.connect(self.abrir_mat_viewer)
         self.layout.addWidget(self.btn_mat)
 
         self.combo_llaves = QComboBox()
@@ -183,6 +183,10 @@ class SeñalMenu(QMainWindow):
     def abrir_csv_view(self):
         self.csv_view = CSVView()
         self.csv_view.show()
+        
+    def abrir_mat_viewer(self):
+    self.mat_viewer = MatViewer()
+    self.mat_viewer.show()
 
     def cargar_archivo_mat(self):
         ruta, _ = QFileDialog.getOpenFileName(self, "Seleccionar archivo .mat", "", "Archivos MAT (*.mat)")
@@ -242,6 +246,85 @@ class SeñalMenu(QMainWindow):
     def abrir_visualizador(self):
         self.visualizador = VisualizadorInteractivo()
         self.visualizador.show()
+
+class MatViewer(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Visualizador de archivo .mat")
+        self.setGeometry(300, 300, 800, 600)
+
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+
+        self.canvas = FigureCanvas(Figure(figsize=(6, 4)))
+        self.layout.addWidget(self.canvas)
+
+        self.btn_cargar = QPushButton("Seleccionar archivo .mat")
+        self.btn_cargar.clicked.connect(self.cargar_mat)
+        self.layout.addWidget(self.btn_cargar)
+
+        self.combo_llaves = QComboBox()
+        self.combo_llaves.currentTextChanged.connect(self.configurar_selector)
+        self.layout.addWidget(QLabel("Selecciona una variable:"))
+        self.layout.addWidget(self.combo_llaves)
+
+        self.combo_ensayo = QComboBox()
+        self.combo_canal = QComboBox()
+        self.combo_ensayo.currentIndexChanged.connect(self.graficar)
+        self.combo_canal.currentIndexChanged.connect(self.graficar)
+
+        self.layout.addWidget(QLabel("Ensayo:"))
+        self.layout.addWidget(self.combo_ensayo)
+        self.layout.addWidget(QLabel("Canal:"))
+        self.layout.addWidget(self.combo_canal)
+
+    def cargar_mat(self):
+        ruta, _ = QFileDialog.getOpenFileName(self, "Seleccionar archivo .mat", "", "Archivos MAT (*.mat)")
+        if not ruta:
+            return
+        try:
+            self.datos_mat = loadmat(ruta)
+            llaves = [k for k in self.datos_mat.keys() if not k.startswith("__")]
+            self.combo_llaves.clear()
+            self.combo_llaves.addItems(llaves)
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"No se pudo cargar el archivo:\n{e}")
+
+    def configurar_selector(self, llave):
+        try:
+            array = np.array(self.datos_mat[llave])
+            if array.ndim != 3:
+                QMessageBox.critical(self, "Error", f"La variable '{llave}' no tiene dimensiones [ensayos, muestras, canales].")
+                return
+
+            self.array = array
+            ensayos, _, canales = array.shape
+            self.combo_ensayo.clear()
+            self.combo_ensayo.addItems([str(i) for i in range(ensayos)])
+            self.combo_canal.clear()
+            self.combo_canal.addItems([str(i) for i in range(canales)])
+            self.graficar()
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error al configurar la señal:\n{e}")
+
+    def graficar(self):
+        try:
+            ensayo = int(self.combo_ensayo.currentText())
+            canal = int(self.combo_canal.currentText())
+            senal = self.array[ensayo, :, canal]
+
+            ax = self.canvas.figure.subplots()
+            ax.clear()
+            ax.plot(senal, label=f"Ensayo {ensayo}, Canal {canal}")
+            ax.set_title("Señal desde archivo .mat")
+            ax.set_xlabel("Muestras")
+            ax.set_ylabel("Amplitud")
+            ax.legend()
+            ax.grid(True)
+            self.canvas.draw()
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"No se pudo graficar la señal:\n{e}")
+
 
 class CSVView(QWidget):
     def __init__(self):
