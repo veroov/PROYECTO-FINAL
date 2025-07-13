@@ -146,27 +146,10 @@ class SeñalMenu(QMainWindow):
         self.setGeometry(200, 200, 900, 700)
 
         self.layout = QVBoxLayout()
-        self.canvas = FigureCanvas(Figure(figsize=(6, 4)))
-        self.ax = self.canvas.figure.add_subplot(111)
-        self.layout.addWidget(self.canvas)
         
         self.btn_mat = QPushButton("Abrir visualizador .mat")
         self.btn_mat.clicked.connect(self.abrir_mat_viewer)
         self.layout.addWidget(self.btn_mat)
-
-        self.combo_llaves = QComboBox()
-        self.combo_llaves.currentTextChanged.connect(self.configurar_selector_senal)
-        self.layout.addWidget(QLabel("Selecciona una señal:"))
-        self.layout.addWidget(self.combo_llaves)
-
-        self.combo_ensayo = QComboBox()
-        self.combo_ensayo.currentIndexChanged.connect(self.graficar_senal)
-        self.combo_canal = QComboBox()
-        self.combo_canal.currentIndexChanged.connect(self.graficar_senal)
-        self.layout.addWidget(QLabel("Ensayo:"))
-        self.layout.addWidget(self.combo_ensayo)
-        self.layout.addWidget(QLabel("Canal:"))
-        self.layout.addWidget(self.combo_canal)
 
         self.btn_csv = QPushButton("Visualizar CSV")
         self.btn_csv.clicked.connect(self.abrir_csv_view)
@@ -188,65 +171,9 @@ class SeñalMenu(QMainWindow):
         self.mat_viewer = MatViewer()
         self.mat_viewer.show()
 
-    def cargar_archivo_mat(self):
-        ruta, _ = QFileDialog.getOpenFileName(self, "Seleccionar archivo .mat", "", "Archivos MAT (*.mat)")
-        if not ruta:
-            return
-        try:
-            self.datos_mat = loadmat(ruta)
-            llaves = [k for k in self.datos_mat.keys() if not k.startswith("__")]
-            self.combo_llaves.clear()
-            self.combo_llaves.addItems(llaves)
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"No se pudo cargar el archivo:\n{e}")
-
-    def configurar_selector_senal(self, llave):
-        if not llave:
-            return
-        try:
-            array = np.array(self.datos_mat[llave])
-            if array.ndim != 3:
-                QMessageBox.critical(self, "Error", f"La variable '{llave}' no tiene dimensiones [ensayos, muestras, canales].")
-                return
-
-            self.array_seleccionado = array
-            ensayos, muestras, canales = array.shape
-
-            self.combo_ensayo.clear()
-            self.combo_ensayo.addItems([str(i) for i in range(ensayos)])
-            self.combo_canal.clear()
-            self.combo_canal.addItems([str(i) for i in range(canales)])
-
-            self.graficar_senal()
-
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Error al configurar señal:\n{e}")
-
-    def graficar_senal(self):
-        try:
-            if self.combo_ensayo.currentText() == "" or self.combo_canal.currentText() == "":
-                return 
-        
-            ensayo = int(self.combo_ensayo.currentText())
-            canal = int(self.combo_canal.currentText())
-            senal = self.array_seleccionado[ensayo, :, canal]
-
-            self.ax.clear()
-            self.ax.plot(senal, label=f"Ensayo {ensayo}, Canal {canal}")
-            self.ax.set_title("Señal del archivo .mat")
-            self.ax.set_xlabel("Muestras")
-            self.ax.set_ylabel("Amplitud")
-            self.ax.legend()
-            self.ax.grid(True)
-            self.canvas.draw()
-
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"No se pudo graficar la señal:\n{e}")
-
     def abrir_visualizador(self):
         self.visualizador = VisualizadorInteractivo()
         self.visualizador.show()
-
 class MatViewer(QWidget):
     def __init__(self):
         super().__init__()
@@ -309,6 +236,9 @@ class MatViewer(QWidget):
 
     def graficar(self):
         try:
+            if not self.combo_ensayo.currentText().isdigit() or not self.combo_canal.currentText().isdigit():
+                return
+        
             ensayo = int(self.combo_ensayo.currentText())
             canal = int(self.combo_canal.currentText())
             senal = self.array[ensayo, :, canal]
