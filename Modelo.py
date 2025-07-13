@@ -102,7 +102,47 @@ class ImagenMedica:
         elif eje == 2:  # Plano Sagital
             return self.volumen[:, :, indice]
         return None
-    
+class ProcesadorImagen:
+    def __init__(self, ruta):
+        self.ruta = ruta
+        self.original = cv2.imread(ruta, cv2.IMREAD_COLOR)
+        self.procesada = self.original.copy()
+
+    def cambiar_espacio_color(self, modo="gris"):
+        if modo == "gris":
+            self.procesada = cv2.cvtColor(self.original, cv2.COLOR_BGR2GRAY)
+        elif modo == "hsv":
+            self.procesada = cv2.cvtColor(self.original, cv2.COLOR_BGR2HSV)
+        return self.procesada
+
+    def ecualizar(self):
+        gris = cv2.cvtColor(self.original, cv2.COLOR_BGR2GRAY)
+        self.procesada = cv2.equalizeHist(gris)
+        return self.procesada
+
+    def binarizar(self, umbral=127):
+        gris = cv2.cvtColor(self.original, cv2.COLOR_BGR2GRAY)
+        _, self.procesada = cv2.threshold(gris, umbral, 255, cv2.THRESH_BINARY)
+        return self.procesada
+
+    def operacion_morfologica(self, tipo="apertura", tam_kernel=5):
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (tam_kernel, tam_kernel))
+        binaria = self.binarizar()
+        if tipo == "apertura":
+            self.procesada = cv2.morphologyEx(binaria, cv2.MORPH_OPEN, kernel)
+        elif tipo == "cierre":
+            self.procesada = cv2.morphologyEx(binaria, cv2.MORPH_CLOSE, kernel)
+        return self.procesada
+
+    def contar_celulas(self):
+        gris = cv2.cvtColor(self.original, cv2.COLOR_BGR2GRAY)
+        _, binaria = cv2.threshold(gris, 127, 255, cv2.THRESH_BINARY_INV)
+        contornos, _ = cv2.findContours(binaria, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        return len(contornos)
+    def invertir_imagen(self):
+        self.procesada = cv2.bitwise_not(self.original)
+        return self.procesada
+        
 class GestorSeñales:
     def __init__(self):
         self.datos_mat = {}
