@@ -3,6 +3,7 @@ import os
 import numpy as np
 from pymongo.collection import Collection
 from pymongo import MongoClient
+from scipy.io import loadmat
 
 #Conexión a la base de datos 
 client = MongoClient("mongodb://localhost:27017/")
@@ -100,3 +101,43 @@ class ImagenMedica:
         elif eje == 2:  # Plano Sagital
             return self.volumen[:, :, indice]
         return None
+    
+class GestorSeñales:
+    def __init__(self):
+        self.datos_mat = {}
+
+    def cargar_mat(self, ruta):
+        """Carga un archivo .mat y devuelve las llaves disponibles."""
+        self.datos_mat = loadmat(ruta)
+        return [k for k in self.datos_mat.keys() if not k.startswith("__")]
+
+    def obtener_senal(self, llave):
+        """Devuelve el array de la señal correspondiente a la llave seleccionada."""
+        if llave in self.datos_mat:
+            return np.squeeze(self.datos_mat[llave])
+        return None
+
+class GestorCSV:
+    def __init__(self):
+        self.df = None
+
+    def cargar_csv(self, ruta):
+        """Carga un archivo CSV y lo guarda como DataFrame."""
+        self.df = pd.read_csv(ruta)
+        return self.df
+
+    def obtener_columnas(self):
+        """Devuelve la lista de nombres de columnas del DataFrame."""
+        if self.df is not None:
+            return list(self.df.columns)
+        return []
+
+    def obtener_datos(self):
+        """Devuelve el DataFrame completo."""
+        return self.df
+
+    def obtener_datos_columnas(self, col_x, col_y):
+        """Devuelve los datos de dos columnas específicas."""
+        if self.df is not None and col_x in self.df.columns and col_y in self.df.columns:
+            return self.df[col_x], self.df[col_y]
+        return None, None
