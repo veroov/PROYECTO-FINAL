@@ -90,13 +90,16 @@ class ImagenMenu(QMainWindow):
         self.layout_principal.addWidget(panel_controles)
         self.layout_principal.addWidget(self.canvas)
 
+    def setControlador(self,c):
+        self.__miCoordinador = c
+
 
     def seleccionar_carpeta(self):
         # QFileDialog.getExistingDirectory abre un diálogo nativo del sistema para que el usuario elija una carpeta.
         carpeta = QFileDialog.getExistingDirectory(self, "Seleccionar carpeta DICOM")
         if carpeta:
             try:
-                # Usamos la clase ImagenMedica del Modelo
+                # Usamos la clase ImagenMedica del Modelo, quitar
                 self.imagen_medica = ImagenMedica(carpeta, coleccion_dicom)
                 self.imagen_medica.cargar_dicoms()
                 self.imagen_medica.guardar_en_mongo()
