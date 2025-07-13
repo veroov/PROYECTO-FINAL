@@ -139,7 +139,6 @@ class ImagenMenu(QMainWindow):
             self.canvas.draw()
 
 #EL RESTO DE TUS CLASES 
-
 class SeñalMenu(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -148,12 +147,26 @@ class SeñalMenu(QMainWindow):
 
         self.layout = QVBoxLayout()
         self.canvas = FigureCanvas(Figure(figsize=(6, 4)))
+        self.ax = self.canvas.figure.add_subplot(111)
         self.layout.addWidget(self.canvas)
-        self.mostrar_senal_simulada() 
-
+        
         self.btn_mat = QPushButton("Cargar archivo .mat")
         self.btn_mat.clicked.connect(self.cargar_archivo_mat)
         self.layout.addWidget(self.btn_mat)
+
+        self.combo_llaves = QComboBox()
+        self.combo_llaves.currentTextChanged.connect(self.configurar_selector_senal)
+        self.layout.addWidget(QLabel("Selecciona una señal:"))
+        self.layout.addWidget(self.combo_llaves)
+
+        self.combo_ensayo = QComboBox()
+        self.combo_ensayo.currentIndexChanged.connect(self.graficar_senal)
+        self.combo_canal = QComboBox()
+        self.combo_canal.currentIndexChanged.connect(self.graficar_senal)
+        self.layout.addWidget(QLabel("Ensayo:"))
+        self.layout.addWidget(self.combo_ensayo)
+        self.layout.addWidget(QLabel("Canal:"))
+        self.layout.addWidget(self.combo_canal)
 
         self.btn_csv = QPushButton("Visualizar CSV")
         self.btn_csv.clicked.connect(self.abrir_csv_view)
@@ -167,18 +180,6 @@ class SeñalMenu(QMainWindow):
         widget.setLayout(self.layout)
         self.setCentralWidget(widget)
 
-    def mostrar_senal_simulada(self):
-        t = np.linspace(0, 1, 500)
-        senal = np.sin(2 * np.pi * 10 * t)
-        ax = self.canvas.figure.subplots()
-        ax.clear()
-        ax.plot(t, senal, label="Señal Senoidal")
-        ax.set_title("Señal simulada de bienvenida")
-        ax.set_xlabel("Tiempo (s)")
-        ax.set_ylabel("Amplitud")
-        ax.legend()
-        self.canvas.draw()
-
     def abrir_csv_view(self):
         self.csv_view = CSVView()
         self.csv_view.show()
@@ -190,45 +191,53 @@ class SeñalMenu(QMainWindow):
         try:
             self.datos_mat = loadmat(ruta)
             llaves = [k for k in self.datos_mat.keys() if not k.startswith("__")]
-            if not llaves:
-                QMessageBox.warning(self, "Advertencia", "No se encontraron variables de señal válidas en el archivo.")
-                return
-
-            # Crear y añadir widgets para seleccionar la señal si no existen
-            if not hasattr(self, 'combo_llaves'):
-                self.combo_llaves = QComboBox()
-                self.layout.addWidget(QLabel("Selecciona una señal para visualizar:"))
-                self.layout.addWidget(self.combo_llaves)
-                self.combo_llaves.currentTextChanged.connect(self.mostrar_senal_mat)
-
-            # Llenar el combo box con las llaves y mostrar la primera señal
             self.combo_llaves.clear()
             self.combo_llaves.addItems(llaves)
-            
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo cargar el archivo:\n{e}")
 
-    def mostrar_senal_mat(self, llave):
-        if not llave: # Evitar errores si el combo está vacío
+    def configurar_selector_senal(self, llave):
+        if not llave:
             return
         try:
-            # np.squeeze es útil para convertir arrays de (n, 1) o (1, n) a (n,)
-            array = np.squeeze(np.array(self.datos_mat[llave]))
-            if array.ndim != 1:
-                QMessageBox.critical(self, "Error", f"La variable '{llave}' no es una señal 1D.")
+            array = np.array(self.datos_mat[llave])
+            if array.ndim != 3:
+                QMessageBox.critical(self, "Error", f"La variable '{llave}' no tiene dimensiones [ensayos, muestras, canales].")
                 return
 
-            ax = self.canvas.figure.subplots()
-            ax.clear()
-            ax.plot(array, label=f"Señal: {llave}")
-            ax.set_title(f"Señal desde archivo .mat ({llave})")
-            ax.set_xlabel("Muestras")
-            ax.set_ylabel("Amplitud")
-            ax.grid(True)
-            ax.legend()
-            self.canvas.draw()
+            self.array_seleccionado = array
+            ensayos, muestras, canales = array.shape
+
+            self.combo_ensayo.clear()
+            self.combo_ensayo.addItems([str(i) for i in range(ensayos)])
+            self.combo_canal.clear()
+            self.combo_canal.addItems([str(i) for i in range(canales)])
+
+            self.graficar_senal()
+
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"No se pudo graficar la señal '{llave}'.\nError: {e}")
+            QMessageBox.critical(self, "Error", f"Error al configurar señal:\n{e}")
+
+    def graficar_senal(self):
+        try:
+            if self.combo_ensayo.currentText() == "" or self.combo_canal.currentText() == "":
+                return 
+        
+            ensayo = int(self.combo_ensayo.currentText())
+            canal = int(self.combo_canal.currentText())
+            senal = self.array_seleccionado[ensayo, :, canal]
+
+            self.ax.clear()
+            self.ax.plot(senal, label=f"Ensayo {ensayo}, Canal {canal}")
+            self.ax.set_title("Señal del archivo .mat")
+            self.ax.set_xlabel("Muestras")
+            self.ax.set_ylabel("Amplitud")
+            self.ax.legend()
+            self.ax.grid(True)
+            self.canvas.draw()
+
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"No se pudo graficar la señal:\n{e}")
 
     def abrir_visualizador(self):
         self.visualizador = VisualizadorInteractivo()
@@ -302,7 +311,6 @@ class CSVView(QWidget):
             QMessageBox.critical(self, "Error", f"No se pudo graficar:\n{e}")
 
 class VisualizadorInteractivo(QWidget):
-    # (Sin cambios)
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Visualizador Interactivo - GenEraVid")
@@ -358,7 +366,6 @@ class VisualizadorInteractivo(QWidget):
         self.canvas.draw()
 
 class LoginWindow(QWidget):
-    # (Sin cambios)
     def __init__(self):
         super().__init__()
         self.setWindowTitle("GenEraVid Viewer")

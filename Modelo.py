@@ -123,9 +123,12 @@ class GestorCSV:
         self.df = None
 
     def cargar_csv(self, ruta):
-        """Carga un archivo CSV y lo guarda como DataFrame."""
-        self.df = pd.read_csv(ruta)
-        return self.df
+        try:
+            self.df = pd.read_csv(ruta)
+            return self.df
+        except Exception as e:
+            print(f"Error al cargar CSV: {e}")
+            return None
 
     def obtener_columnas(self):
         """Devuelve la lista de nombres de columnas del DataFrame."""
