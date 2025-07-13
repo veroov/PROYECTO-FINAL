@@ -183,10 +183,10 @@ class SeñalMenu(QMainWindow):
     def abrir_csv_view(self):
         self.csv_view = CSVView()
         self.csv_view.show()
-        
+
     def abrir_mat_viewer(self):
-    self.mat_viewer = MatViewer()
-    self.mat_viewer.show()
+        self.mat_viewer = MatViewer()
+        self.mat_viewer.show()
 
     def cargar_archivo_mat(self):
         ruta, _ = QFileDialog.getOpenFileName(self, "Seleccionar archivo .mat", "", "Archivos MAT (*.mat)")
