@@ -6,18 +6,17 @@ from pymongo import MongoClient
 from Modelo import Usuario, ImagenMedica
 import sys
 import pandas as pd
-import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from PyQt5.QtCore import Qt
 
-# Conexión global a MongoDB
+#Conexión global a MongoDB
 client = MongoClient("mongodb://localhost:27017/")
 db = client["Bioingenieria"]
 coleccion_usuarios = db["Usuarios"]
 coleccion_dicom = db["Dicom_nifti"]
 
-# Menú para expertos en imágenes
+#Menú para expertos en imágenes
 class ImagenMenu(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -45,61 +44,46 @@ class ImagenMenu(QMainWindow):
                 metadatos = imagen.metadatos()
 
                 self.btn_cargar.hide()
+
+                # Limpiar widgets anteriores 
                 while self.layout.count() > 1:
                     widget = self.layout.itemAt(1).widget()
                     if widget:
                         self.layout.removeWidget(widget)
                         widget.deleteLater()
 
+                # Mostrar los metadatos nuevos
                 for clave, valor in metadatos.items():
                     self.layout.addWidget(QLabel(f"{clave}: {valor}"))
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"No se pudo cargar la carpeta:\n{e}")
+
 
 # Menú para expertos en señales
 class SeñalMenu(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Menú - Señales")
-        self.setGeometry(200, 200, 800, 600)
+        self.setGeometry(200, 200, 400, 200)
 
-        self.layout = QVBoxLayout()
+        layout = QVBoxLayout()
 
-        # Mostrar señal senoidal automáticamente
-        self.canvas = FigureCanvas(Figure(figsize=(5, 3)))
-        self.layout.addWidget(self.canvas)
-        self.mostrar_senal()
-
-        # Botón para abrir visor CSV
-        self.btn_csv = QPushButton("Visualizar CSV")
-        self.btn_csv.clicked.connect(self.abrir_csv_view)
-        self.layout.addWidget(self.btn_csv)
+        btn_csv = QPushButton("Visualizar CSV")
+        btn_csv.clicked.connect(self.abrir_csv_view)
+        layout.addWidget(btn_csv)
 
         widget = QWidget()
-        widget.setLayout(self.layout)
+        widget.setLayout(layout)
         self.setCentralWidget(widget)
-
-    def mostrar_senal(self):
-        ax = self.canvas.figure.subplots()
-        ax.clear()
-        t = np.linspace(0, 1, 500)
-        senal = np.sin(2 * np.pi * 10 * t)
-        ax.plot(t, senal, label="Señal Senoidal")
-        ax.set_title("Señal simulada")
-        ax.set_xlabel("Tiempo (s)")
-        ax.set_ylabel("Amplitud")
-        ax.legend()
-        self.canvas.draw()
 
     def abrir_csv_view(self):
         self.csv_view = CSVView()
         self.csv_view.show()
-
-# Ventana de login y registro
+#Ventana principal 
 class LoginWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("BioApp Viewer")
+        self.setWindowTitle("aun no tiene nombre")
         self.setStyleSheet("""
     QWidget { background: white; font-family: Arial; font-size: 14px; }
     QPushButton {background: #4da6ff; color: white; border-radius: 5px; padding: 6px;}
@@ -108,26 +92,28 @@ class LoginWindow(QWidget):
         self.setGeometry(150, 150, 300, 300)
 
         self.layout = QVBoxLayout()
+        self.layout.setSpacing(10)
+        self.layout.setContentsMargins(20, 20, 20, 20)
         self.setLayout(self.layout)
         self.mostrar_opciones_iniciales()
 
     def mostrar_opciones_iniciales(self):
-        titulo = QLabel("Bienvenido a BioApp")
+        titulo = QLabel("Bienvenido a ...")
         titulo.setStyleSheet("font-size: 20px; font-weight: bold; color: #2c3e50;")
         titulo.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(titulo)
-
         self.btn_login = QPushButton("Iniciar Sesión")
         self.btn_login.clicked.connect(self.mostrar_login)
-        self.layout.addWidget(self.btn_login)
 
         self.btn_registro = QPushButton("Registrarse")
         self.btn_registro.clicked.connect(self.mostrar_registro)
+
+        self.layout.addWidget(self.btn_login)
         self.layout.addWidget(self.btn_registro)
 
     def mostrar_login(self):
         self.limpiar_layout()
-
+     
         self.layout.addWidget(QLabel("Usuario:"))
         self.input_usuario = QLineEdit()
         self.layout.addWidget(self.input_usuario)
@@ -189,6 +175,7 @@ class LoginWindow(QWidget):
 
         if valido:
             rol = resultado.strip().lower()
+            QMessageBox.information(self, "Login exitoso", f"Bienvenido {usuario.usuario}, rol: {rol}")
             if rol == "imagenes":
                 self.abrir_menu(ImagenMenu)
             elif rol == "señales":
@@ -220,8 +207,7 @@ class LoginWindow(QWidget):
         self.hide()
         self.menu = ventana_clase()
         self.menu.show()
-
-# Clase para visualizar CSV
+#Visualizar archivos csv 
 class CSVView(QWidget):
     def __init__(self):
         super().__init__()
@@ -243,6 +229,10 @@ class CSVView(QWidget):
         self.btn_graficar.clicked.connect(self.graficar)
         self.layout.addWidget(self.btn_graficar)
 
+        self.btn_limpiar = QPushButton("Limpiar gráfico")
+        self.btn_limpiar.clicked.connect(self.limpiar_grafico)
+        self.layout.addWidget(self.btn_limpiar)
+
         self.tabla = QTableWidget()
         self.layout.addWidget(self.tabla)
 
@@ -251,20 +241,28 @@ class CSVView(QWidget):
         self.layout.addWidget(self.canvas)
 
         self.setLayout(self.layout)
+
         self.df = None
 
+    
     def cargar_csv(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Seleccionar CSV", "", "CSV Files (*.csv)")
         if not file_path:
             return
+
         try:
             self.df = pd.read_csv(file_path)
-            self.mostrar_tabla()
-            self.llenar_combos()
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo cargar el archivo:\n{e}")
+            return
+
+        self.mostrar_tabla()
+        self.llenar_combos()
 
     def mostrar_tabla(self):
+        if self.df is None:
+            return
+
         self.tabla.setRowCount(len(self.df))
         self.tabla.setColumnCount(len(self.df.columns))
         self.tabla.setHorizontalHeaderLabels(self.df.columns)
@@ -275,32 +273,46 @@ class CSVView(QWidget):
                 self.tabla.setItem(i, j, QTableWidgetItem(valor))
 
     def llenar_combos(self):
-        columnas = list(self.df.columns)
         self.combo_x.clear()
         self.combo_y.clear()
+
+        columnas = list(self.df.columns)
         self.combo_x.addItems(columnas)
         self.combo_y.addItems(columnas)
 
     def graficar(self):
         if self.df is None:
-            QMessageBox.warning(self, "Advertencia", "Carga un archivo CSV primero.")
+            QMessageBox.warning(self, "Advertencia", "Primero debes cargar un archivo CSV.")
             return
+
         x_col = self.combo_x.currentText()
         y_col = self.combo_y.currentText()
+
+        if not x_col or not y_col:
+            QMessageBox.warning(self, "Advertencia", "Selecciona columnas X e Y.")
+            return
+
         try:
             x = self.df[x_col]
             y = self.df[y_col]
-            self.figure.clear()
+
+            self.figure.clear()  # Limpiar gráfica anterior
             ax = self.figure.add_subplot(111)
             ax.scatter(x, y)
-            ax.set_title("Gráfico de Dispersión")
             ax.set_xlabel(x_col)
             ax.set_ylabel(y_col)
+            ax.set_title("Gráfico de Dispersión")
+            ax.grid(True)
             self.canvas.draw()
+
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo graficar:\n{e}")
 
-# Ejecutar la app
+    def limpiar_grafico(self):
+        self.figure.clear()
+        self.canvas.draw()
+
+#Ejecutar la app 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     login = LoginWindow()
