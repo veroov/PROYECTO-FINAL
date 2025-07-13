@@ -2,7 +2,13 @@ import pydicom
 import os
 import numpy as np
 from pymongo.collection import Collection
+from pymongo import MongoClient
 
+#Conexión a la base de datos 
+client = MongoClient("mongodb://localhost:27017/")
+db = client["Bioingenieria"]
+coleccion_usuarios = db["Usuarios"]
+coleccion_dicom = db["Dicom_nifti"]
 class Usuario:
     def __init__(self, usuario, contraseña, rol, coleccion: Collection):
         self.usuario = usuario

@@ -1,26 +1,20 @@
 import sys
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
+QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QHBoxLayout, QMessageBox, QComboBox, QFileDialog, QTableWidget,
     QTableWidgetItem, QSlider, QRadioButton, QButtonGroup, QGroupBox
 )
 from PyQt5.QtCore import Qt
-from pymongo import MongoClient
-from Modelo import Usuario, ImagenMedica  # Usamos tu clase Modelo modificada
+from Modelo import Usuario, ImagenMedica
 import pandas as pd
 import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from scipy.io import loadmat
 import cv2
+from Modelo import coleccion_usuarios, coleccion_dicom
 
-# --- Conexión a la base de datos (sin cambios) ---
-client = MongoClient("mongodb://localhost:27017/")
-db = client["Bioingenieria"]
-coleccion_usuarios = db["Usuarios"]
-coleccion_dicom = db["Dicom_nifti"]
-
-# --- Clase ImagenMenu (MODIFICADA PARA SER INTERACTIVA) ---
+#Clase ImagenMenu 
 class ImagenMenu(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -29,12 +23,12 @@ class ImagenMenu(QMainWindow):
         
         self.imagen_medica = None # Objeto para manejar la lógica DICOM
 
-        # --- Layout principal ---
+        #Layout principal
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
         self.layout_principal = QHBoxLayout(main_widget)
 
-        # --- Panel de controles (Izquierda) ---
+        #Panel de controles (Izquierda) 
         panel_controles = QWidget()
         panel_controles.setFixedWidth(250)
         self.layout_controles = QVBoxLayout(panel_controles)
@@ -48,7 +42,7 @@ class ImagenMenu(QMainWindow):
         self.info_label.setWordWrap(True)
         self.layout_controles.addWidget(self.info_label)
         
-        # --- Grupo de controles DICOM (inicialmente oculto) ---
+        # Grupo de controles DICOM (inicialmente oculto) 
         self.dicom_controls_group = QGroupBox("Controles del Visualizador")
         dicom_layout = QVBoxLayout()
 
@@ -77,7 +71,7 @@ class ImagenMenu(QMainWindow):
         self.layout_controles.addWidget(self.dicom_controls_group)
         self.dicom_controls_group.setVisible(False) # Oculto hasta cargar datos
 
-        # --- Panel de visualización (Derecha) ---
+        #Panel de visualización (Derecha) 
         self.canvas = FigureCanvas(Figure(figsize=(5, 5)))
         self.ax = self.canvas.figure.subplots()
         self.ax.axis('off')
@@ -144,7 +138,7 @@ class ImagenMenu(QMainWindow):
             self.ax.axis('off')
             self.canvas.draw()
 
-# --- EL RESTO DE TUS CLASES (SIN CAMBIOS IMPORTANTES) ---
+#EL RESTO DE TUS CLASES 
 
 class SeñalMenu(QMainWindow):
     def __init__(self):
@@ -155,7 +149,7 @@ class SeñalMenu(QMainWindow):
         self.layout = QVBoxLayout()
         self.canvas = FigureCanvas(Figure(figsize=(6, 4)))
         self.layout.addWidget(self.canvas)
-        self.mostrar_senal_simulada() # Cambiado de nombre para claridad
+        self.mostrar_senal_simulada() 
 
         self.btn_mat = QPushButton("Cargar archivo .mat")
         self.btn_mat.clicked.connect(self.cargar_archivo_mat)
@@ -186,7 +180,6 @@ class SeñalMenu(QMainWindow):
         self.canvas.draw()
 
     def abrir_csv_view(self):
-        # Asegurarse que la ventana se guarde como atributo para que no se cierre sola
         self.csv_view = CSVView()
         self.csv_view.show()
 
@@ -242,7 +235,6 @@ class SeñalMenu(QMainWindow):
         self.visualizador.show()
 
 class CSVView(QWidget):
-    # (Sin cambios)
     def __init__(self):
         super().__init__()
         self.setWindowTitle("CSV Viewer")
