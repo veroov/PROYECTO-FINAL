@@ -184,6 +184,7 @@ class MatViewer(QWidget):
         self.setLayout(self.layout)
 
         self.canvas = FigureCanvas(Figure(figsize=(6, 4)))
+        self.ax = self.canvas.figure.add_subplot(111)
         self.layout.addWidget(self.canvas)
 
         self.btn_cargar = QPushButton("Seleccionar archivo .mat")
