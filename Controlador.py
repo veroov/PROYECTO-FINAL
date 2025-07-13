@@ -1,34 +1,22 @@
-import os
-from datetime import datetime
 import matplotlib.pyplot as plt
-from PyQt5.QtWidgets import QFileDialog, QTableWidgetItem
-from Modelo import GestorCSV, RegistroArchivo, coleccion_archivos
+from PyQt5.QtWidgets import QFileDialog
+#importo las clases de los archivos modelo y vista
+from Modelo import *
+from vistaa import *
 
-class CSVControlador:
-    def __init__(self, vista):
-        self.vista = vista
-        self.modelo = GestorCSV()
+class Coordinador:
+    def __init__(self, vista, modelo): #el controlador recibe todo de la vista y el modelo
+        self.__mivista = vista
+        self.__mimodelo = modelo
         self.conectar_eventos()
 
     def conectar_eventos(self):
         self.vista.btn_cargar.clicked.connect(self.cargar_csv)
         self.vista.btn_graficar.clicked.connect(self.graficar)
 
-    def cargar_csv(self):
-        ruta, _ = QFileDialog.getOpenFileName(self.vista, "Selecciona un archivo CSV", "", "CSV files (*.csv)")
-        if ruta:
-            self.modelo.cargar_csv(ruta)
-            columnas = self.modelo.obtener_columnas()
-            self.vista.combo_x.clear()
-            self.vista.combo_y.clear()
-            self.vista.combo_x.addItems(columnas)
-            self.vista.combo_y.addItems(columnas)
-            self.mostrar_tabla()
-
-            # REGISTRO EN MONGODB
-            nombre = os.path.basename(ruta)
-            registro = RegistroArchivo("csv", nombre, ruta, coleccion_archivos)
-            registro.guardar()
+    def cargar_csv(self,ruta):
+       return self.__mimodelo.cargar_csv(ruta) # como en el modelo se define esta función, aquí se llama
+     
 
     def mostrar_tabla(self):
         df = self.modelo.obtener_datos()
