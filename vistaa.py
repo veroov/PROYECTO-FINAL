@@ -17,6 +17,8 @@ from Modelo import coleccion_usuarios, coleccion_dicom
 #Clase ImagenMenu 
 class ImagenMenu(QMainWindow):
     def __init__(self):
+        # super().__init__() es un comando esencial que ejecuta el constructor de la clase padre (QMainWindow),
+        # asegurando que nuestra ventana se inicialice correctamente.
         super().__init__()
         self.setWindowTitle("Menú - Visualizador de Imágenes DICOM")
         self.setGeometry(100, 100, 800, 600)
@@ -25,6 +27,7 @@ class ImagenMenu(QMainWindow):
 
         #Layout principal
         main_widget = QWidget()
+        # setCentralWidget() establece el widget principal sobre el cual se construirán los demás layouts.
         self.setCentralWidget(main_widget)
         self.layout_principal = QHBoxLayout(main_widget)
 
@@ -35,7 +38,10 @@ class ImagenMenu(QMainWindow):
         self.layout_controles.setAlignment(Qt.AlignTop)
 
         self.btn_cargar = QPushButton("Seleccionar Carpeta DICOM")
+        # .clicked.connect() es el mecanismo de "señales y slots" de PyQt5, fundamental para la interactividad.
+        # Conecta la señal "clicked" del botón con el "slot" (la función) 'seleccionar_carpeta'.
         self.btn_cargar.clicked.connect(self.seleccionar_carpeta)
+        # .addWidget() es el comando para añadir un componente (como un botón) a un layout.
         self.layout_controles.addWidget(self.btn_cargar)
 
         self.info_label = QLabel("Por favor, cargue una carpeta DICOM para comenzar.")
@@ -82,6 +88,7 @@ class ImagenMenu(QMainWindow):
 
 
     def seleccionar_carpeta(self):
+        # QFileDialog.getExistingDirectory abre un diálogo nativo del sistema para que el usuario elija una carpeta.
         carpeta = QFileDialog.getExistingDirectory(self, "Seleccionar carpeta DICOM")
         if carpeta:
             try:
@@ -95,6 +102,7 @@ class ImagenMenu(QMainWindow):
                 self.actualizar_plano() # Muestra el primer corte axial
                 
             except Exception as e:
+                # QMessageBox.critical muestra una ventana emergente de error para informar al usuario.
                 QMessageBox.critical(self, "Error", f"No se pudo cargar la carpeta:\n{e}")
 
     def mostrar_info_y_controles(self):
@@ -133,12 +141,14 @@ class ImagenMenu(QMainWindow):
             self.slider_label.setText(f"Corte: {indice + 1} / {total_cortes}")
             
             # Mostrar la imagen en el canvas
+            # ax.clear() es un comando vital: borra el contenido anterior del gráfico antes de dibujar uno nuevo.
             self.ax.clear()
+             # ax.imshow() es la función de Matplotlib para renderizar un array 2D (una matriz) como una imagen.
             self.ax.imshow(corte_2d, cmap='gray', aspect='auto')
             self.ax.axis('off')
+            # canvas.draw() actualiza el lienzo, haciendo que el nuevo gráfico sea visible en la interfaz.
             self.canvas.draw()
 
-#EL RESTO DE TUS CLASES 
 class SeñalMenu(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -211,6 +221,8 @@ class MatViewer(QWidget):
         if not ruta:
             return
         try:
+            # loadmat() lee el archivo .mat y lo carga como un diccionario de Python, donde las llaves
+            # son los nombres de las variables y los valores son los arrays de NumPy.
             self.datos_mat = loadmat(ruta)
             llaves = [k for k in self.datos_mat.keys() if not k.startswith("__")]
             self.combo_llaves.clear()
@@ -284,6 +296,8 @@ class CSVView(QWidget):
         if not file_path:
             return
         try:
+            # pd.read_csv() es el comando principal de Pandas para leer un archivo CSV.
+            # Automáticamente lo convierte en un DataFrame, una estructura de tabla optimizada. 
             self.df = pd.read_csv(file_path)
             self.mostrar_tabla()
             self.llenar_combos()
@@ -314,6 +328,7 @@ class CSVView(QWidget):
             y = self.df[y_col]
             self.figure.clear()
             ax = self.figure.add_subplot(111)
+            # ax.scatter() es la función de Matplotlib usada para crear un gráfico de dispersión (scatter plot).
             ax.scatter(x, y)
             ax.set_title("Gráfico de Dispersión")
             ax.set_xlabel(x_col)
