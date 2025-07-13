@@ -243,19 +243,17 @@ class MatViewer(QWidget):
             canal = int(self.combo_canal.currentText())
             senal = self.array[ensayo, :, canal]
 
-            ax = self.canvas.figure.subplots()
-            ax.clear()
-            ax.plot(senal, label=f"Ensayo {ensayo}, Canal {canal}")
-            ax.set_title("Señal desde archivo .mat")
-            ax.set_xlabel("Muestras")
-            ax.set_ylabel("Amplitud")
-            ax.legend()
-            ax.grid(True)
+            self.ax.clear()  # Limpia el gráfico anterior
+            self.ax.plot(senal, label=f"Ensayo {ensayo}, Canal {canal}")
+            self.ax.set_title("Señal desde archivo .mat")
+            self.ax.set_xlabel("Muestras")
+            self.ax.set_ylabel("Amplitud")
+            self.ax.legend()
+            self.ax.grid(True)
             self.canvas.draw()
+
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo graficar la señal:\n{e}")
-
-
 class CSVView(QWidget):
     def __init__(self):
         super().__init__()

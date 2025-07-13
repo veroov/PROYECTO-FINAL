@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import QFileDialog
-from modelo.gestor_tablas import GestorCSV
+from Modelo import GestorCSV
 
 class CSVControlador:
     def __init__(self, vista):
