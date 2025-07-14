@@ -2,7 +2,7 @@ import sys
 from PyQt5.QtWidgets import (
 QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QHBoxLayout, QMessageBox, QComboBox, QFileDialog, QTableWidget,
-    QTableWidgetItem, QSlider, QRadioButton, QButtonGroup, QGroupBox
+    QTableWidgetItem, QSlider, QRadioButton, QButtonGroup, QGroupBox, QStackedWidget
 )
 from PyQt5.QtCore import Qt
 from Modelo import Usuario, ImagenMedica
