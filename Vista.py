@@ -90,13 +90,10 @@ class ImagenMenu(QMainWindow):
         self.layout_principal.addWidget(panel_controles)
         self.layout_principal.addWidget(self.canvas)
 
-<<<<<<< HEAD
     def setControlador(self,c):
         self.coordinador = c
 
 
-=======
->>>>>>> a51e3887aa89bc4c52916f3d59f644dc0453414e
     def seleccionar_carpeta(self):
         # QFileDialog.getExistingDirectory abre un diálogo nativo del sistema para que el usuario elija una carpeta.
         carpeta = QFileDialog.getExistingDirectory(self, "Seleccionar carpeta DICOM")
@@ -180,6 +177,7 @@ class ImagenMenu(QMainWindow):
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo procesar la imagen:\n{e}")
+
 
 
 class SeñalMenu(QMainWindow):
