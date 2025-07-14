@@ -63,7 +63,7 @@ class ImagenMedica:
         }
         return True
 
-    def guardar_en_mongo(self):
+    def guardar_paciente(self):
         if not self._metadatos:
             print("No hay metadatos para guardar. Carga los DICOMs primero.")
             return

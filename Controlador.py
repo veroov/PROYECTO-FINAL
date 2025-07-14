@@ -23,10 +23,14 @@ class Coordinador:
 #selecciona la carpeta DICOM y carga los archivos DICOM en la base de datos
     def seleccionar_archivo(self, carpeta):
         self.imagen_medica = ImagenMedica(carpeta, coleccion_dicom)
-        return self.imagen_medica.cargar_dicoms() and self.imagen_medica.guardar_en_mongo()
+        return self.imagen_medica.cargar_dicoms() 
+    
 
     def metadatos_dicom(self, carpeta): #Obtiene los metadatos de la imagen médica
         return self.imagen_medica.metadatos()
+    
+    def guardar_paciente(self, carpeta):
+        return self.imagen_medica.guardar_paciente()
 
     def obtener_corte(self, eje, indice, carpeta):
         return self.imagen_medica.obtener_corte(eje, indice)
@@ -59,7 +63,7 @@ class Coordinador:
         self.modelo.graficar_dispersion(x, y, plt)
         plt.show()
     
-      def cargar_imagen(self):
+    def cargar_imagen(self):
         ruta, _ = QFileDialog.getOpenFileName(self.vista, "Seleccionar imagen", "", "Imagenes (*.jpg *.png)")
         if ruta:
             self.procesador = ProcesadorImagen(ruta)
@@ -105,7 +109,7 @@ class Coordinador:
             return 
         self.mostrar_imagen(img)
 
- def cargar_mat(self):
+    def cargar_mat(self):
         ruta, _ = QFileDialog.getOpenFileName(self.vista, "Selecciona un archivo .mat", "", "Archivos MAT (*.mat)")
         if ruta:
             llaves = self.senal_modelo.cargar_mat(ruta)

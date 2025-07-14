@@ -103,6 +103,7 @@ class ImagenMenu(QMainWindow):
             try:
                 self.carpeta_actual = carpeta
                 self.coordinador.seleccionar_archivo(carpeta)
+                self.coordinador.guardar_paciente(carpeta)
                 self.mostrar_info_y_controles()  # Activar los controles
                 QMessageBox.information(self, "Éxito", "Carpeta DICOM cargada correctamente.")
 
