@@ -12,7 +12,7 @@ from matplotlib.figure import Figure
 from scipy.io import loadmat
 import cv2
 from Modelo import coleccion_usuarios, coleccion_dicom
-from Modelo import ProcesadorImagen
+from Modelo import ProcesadorImagen, GestorSeñales, GestorCSV  
 
 #Clase ImagenMenu 
 class ImagenMenu(QMainWindow):
@@ -90,10 +90,13 @@ class ImagenMenu(QMainWindow):
         self.layout_principal.addWidget(panel_controles)
         self.layout_principal.addWidget(self.canvas)
 
+<<<<<<< HEAD
     def setControlador(self,c):
         self.coordinador = c
 
 
+=======
+>>>>>>> a51e3887aa89bc4c52916f3d59f644dc0453414e
     def seleccionar_carpeta(self):
         # QFileDialog.getExistingDirectory abre un diálogo nativo del sistema para que el usuario elija una carpeta.
         carpeta = QFileDialog.getExistingDirectory(self, "Seleccionar carpeta DICOM")
@@ -206,6 +209,7 @@ class SeñalMenu(QMainWindow):
     def abrir_mat_viewer(self):
         self.mat_viewer = MatViewer()
         self.mat_viewer.show()
+
 class MatViewer(QWidget):
     def __init__(self):
         super().__init__()
@@ -214,6 +218,9 @@ class MatViewer(QWidget):
 
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
+
+        self.gestor = GestorSeñales()
+        self.array = None
 
         self.canvas = FigureCanvas(Figure(figsize=(6, 4)))
         self.ax = self.canvas.figure.add_subplot(111)
@@ -245,8 +252,7 @@ class MatViewer(QWidget):
         try:
             # loadmat() lee el archivo .mat y lo carga como un diccionario de Python, donde las llaves
             # son los nombres de las variables y los valores son los arrays de NumPy.
-            self.datos_mat = loadmat(ruta)
-            llaves = [k for k in self.datos_mat.keys() if not k.startswith("__")]
+            llaves = self.gestor.cargar_mat(ruta)
             self.combo_llaves.clear()
             self.combo_llaves.addItems(llaves)
         except Exception as e:
@@ -254,7 +260,7 @@ class MatViewer(QWidget):
 
     def configurar_selector(self, llave):
         try:
-            array = np.array(self.datos_mat[llave])
+            array = self.gestor.obtener_senal(llave)
             if array.ndim != 3:
                 QMessageBox.critical(self, "Error", f"La variable '{llave}' no tiene dimensiones [ensayos, muestras, canales].")
                 return
@@ -289,65 +295,84 @@ class MatViewer(QWidget):
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo graficar la señal:\n{e}")
+
 class CSVView(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("CSV Viewer")
+
         self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+
+        self.gestor_csv = GestorCSV()
+        
         self.btn_cargar = QPushButton("Cargar CSV")
         self.btn_cargar.clicked.connect(self.cargar_csv)
         self.layout.addWidget(self.btn_cargar)
+
         self.combo_x = QComboBox()
         self.combo_y = QComboBox()
         self.layout.addWidget(QLabel("Columna X:"))
         self.layout.addWidget(self.combo_x)
         self.layout.addWidget(QLabel("Columna Y:"))
         self.layout.addWidget(self.combo_y)
+
         self.btn_graficar = QPushButton("Graficar Scatter")
         self.btn_graficar.clicked.connect(self.graficar)
         self.layout.addWidget(self.btn_graficar)
+
         self.tabla = QTableWidget()
         self.layout.addWidget(self.tabla)
+
         self.figure = Figure(figsize=(5, 3))
         self.canvas = FigureCanvas(self.figure)
         self.layout.addWidget(self.canvas)
-        self.setLayout(self.layout)
-        self.df = None
+        
     def cargar_csv(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Seleccionar CSV", "", "CSV Files (*.csv)")
-        if not file_path:
+        ruta, _ = QFileDialog.getOpenFileName(self, "Seleccionar CSV", "", "CSV Files (*.csv)")
+        if not ruta:
             return
         try:
             # pd.read_csv() es el comando principal de Pandas para leer un archivo CSV.
             # Automáticamente lo convierte en un DataFrame, una estructura de tabla optimizada. 
-            self.df = pd.read_csv(file_path)
-            self.mostrar_tabla()
-            self.llenar_combos()
+            self.gestor_csv.cargar_csv(ruta)
+            df = self.gestor_csv.obtener_datos()
+            if df is not None:
+                self.mostrar_tabla()
+                self.llenar_combos()
+
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"No se pudo cargar el archivo:\n{e}")
+                QMessageBox.critical(self, "Error", f"No se pudo cargar el archivo:\n{e}")
+
     def mostrar_tabla(self):
-        self.tabla.setRowCount(len(self.df))
-        self.tabla.setColumnCount(len(self.df.columns))
-        self.tabla.setHorizontalHeaderLabels(self.df.columns)
-        for i in range(len(self.df)):
-            for j in range(len(self.df.columns)):
-                valor = str(self.df.iat[i, j])
+        df = self.gestor_csv.obtener_datos()
+        if df is None:
+            return
+        
+        self.tabla.setRowCount(len(df))
+        self.tabla.setColumnCount(len(df.columns))
+        self.tabla.setHorizontalHeaderLabels(df.columns)
+        for i in range(len(df)):
+            for j in range(len(df.columns)):
+                valor = str(df.iat[i, j])
                 self.tabla.setItem(i, j, QTableWidgetItem(valor))
+
     def llenar_combos(self):
-        columnas = list(self.df.columns)
+        columnas = self.gestor_csv.obtener_columnas()
         self.combo_x.clear()
         self.combo_y.clear()
         self.combo_x.addItems(columnas)
         self.combo_y.addItems(columnas)
+
     def graficar(self):
-        if self.df is None:
-            QMessageBox.warning(self, "Advertencia", "Carga un archivo CSV primero.")
-            return
         x_col = self.combo_x.currentText()
         y_col = self.combo_y.currentText()
-        try:
-            x = self.df[x_col]
-            y = self.df[y_col]
+        
+        x, y = self.gestor_csv.obtener_datos_columnas(x_col, y_col)
+        if x is None or y is None:
+            QMessageBox.warning(self, "Advertencia", "Datos inválidos para graficar.")
+            return
+        try: 
             self.figure.clear()
             ax = self.figure.add_subplot(111)
             # ax.scatter() es la función de Matplotlib usada para crear un gráfico de dispersión (scatter plot).
@@ -358,6 +383,7 @@ class CSVView(QWidget):
             self.canvas.draw()
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo graficar:\n{e}")
+
 class LoginWindow(QWidget):
     def __init__(self):
         super().__init__()
