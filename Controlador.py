@@ -10,6 +10,7 @@ class Coordinador:
         self.vista = vista
         self.modelo = modelo
         self.procesador = None
+        self.senal_modelo = GestorSeñales()
         self.conectar_eventos()
 
 
@@ -52,11 +53,7 @@ class Coordinador:
         self.modelo.graficar_dispersion(x, y, plt)
         plt.show()
     
-    def conectar_eventos(self):
-        self.vista.btn_cargar.clicked.connect(self.cargar_imagen)
-        self.vista.btn_procesar.clicked.connect(self.procesar_imagen)
-
-    def cargar_imagen(self):
+      def cargar_imagen(self):
         ruta, _ = QFileDialog.getOpenFileName(self.vista, "Seleccionar imagen", "", "Imagenes (*.jpg *.png)")
         if ruta:
             self.procesador = ProcesadorImagen(ruta)
@@ -102,6 +99,44 @@ class Coordinador:
             return 
         self.mostrar_imagen(img)
 
+ def cargar_mat(self):
+        ruta, _ = QFileDialog.getOpenFileName(self.vista, "Selecciona un archivo .mat", "", "Archivos MAT (*.mat)")
+        if ruta:
+            llaves = self.senal_modelo.cargar_mat(ruta)
+            if not llaves:
+                QMessageBox.warning(self.vista, "Archivo inválido", "No se encontraron señales válidas en el archivo.")
+                return
+            self.vista.combo_llaves.clear()
+            self.vista.combo_llaves.addItems(llaves)
+
+            nombre = os.path.basename(ruta)
+            registro = RegistroArchivo("mat", nombre, ruta, coleccion_archivos)
+            registro.guardar()
+            self.vista.label_estado.setText(f"Archivo cargado: {nombre}")
+
+    def graficar_senal(self):
+        llave = self.vista.combo_llaves.currentText()
+        if not llave:
+            return
+        senal = self.senal_modelo.obtener_senal(llave)
+        if senal is None:
+            QMessageBox.warning(self.vista, "Error", "No se pudo extraer la señal.")
+            return
+
+        self.vista.ax.clear()
+        self.vista.ax.plot(senal)
+        self.vista.ax.set_title(f"Señal: {llave}")
+        self.vista.canvas.draw()
+        
+    def conectar_eventos(self):
+        if hasattr(self.vista, 'btn_cargar'): #hasattr evalua si el objeto, tiene el atributo especificado 
+            self.vista.btn_cargar.clicked.connect(self.cargar_imagen)
+        if hasattr(self.vista, 'btn_procesar'):
+            self.vista.btn_procesar.clicked.connect(self.procesar_imagen)
+        if hasattr(self.vista, 'btn_cargar_mat'):
+            self.vista.btn_cargar_mat.clicked.connect(self.cargar_mat)
+        if hasattr(self.vista, 'combo_llaves'):
+            self.vista.combo_llaves.currentIndexChanged.connect(self.graficar_senal)
 def main():
     app = QApplication(sys.argv)
 
