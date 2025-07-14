@@ -91,7 +91,7 @@ class ImagenMenu(QMainWindow):
         self.layout_principal.addWidget(self.canvas)
 
     def setControlador(self,c):
-        self.__miCoordinador = c
+        self.coordinador = c
 
 
     def seleccionar_carpeta(self):
@@ -99,15 +99,8 @@ class ImagenMenu(QMainWindow):
         carpeta = QFileDialog.getExistingDirectory(self, "Seleccionar carpeta DICOM")
         if carpeta:
             try:
-                # Usamos la clase ImagenMedica del Modelo, quitar
-                self.imagen_medica = ImagenMedica(carpeta, coleccion_dicom)
-                self.imagen_medica.cargar_dicoms()
-                self.imagen_medica.guardar_en_mongo()
-                
-                # Actualizar la interfaz
-                self.mostrar_info_y_controles()
-                self.actualizar_plano() # Muestra el primer corte axial
-                
+                self.coordinador.seleccionar_archivo(carpeta)
+               
             except Exception as e:
                 # QMessageBox.critical muestra una ventana emergente de error para informar al usuario.
                 QMessageBox.critical(self, "Error", f"No se pudo cargar la carpeta:\n{e}")
@@ -469,5 +462,7 @@ class LoginWindow(QWidget):
         self.hide()
         # Guardamos la referencia a la nueva ventana para que no sea eliminada por el recolector de basura
         self.menu = ventana_clase()
+        if hasattr(self.menu, "setControlador"):
+            self.menu.setControlador(self.controlador)
         self.menu.show()
 
