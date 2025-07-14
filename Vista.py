@@ -5,7 +5,6 @@ QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
     QTableWidgetItem, QSlider, QRadioButton, QButtonGroup, QGroupBox, QStackedWidget
 )
 from PyQt5.QtCore import Qt
-from Modelo import Usuario, ImagenMedica
 import pandas as pd
 import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -452,13 +451,16 @@ class LoginWindow(QWidget):
     def reiniciar(self):
         self.limpiar_layout()
         self.mostrar_opciones_iniciales()
+
+    def asignarCoordinador(self,c):
+        self.controlador = c
+
     def verificar_login(self):
-        username = self.input_usuario.text().strip()
+        username = self.input_usuario.text().strip() 
         password = self.input_contra.text().strip()
-        usuario = Usuario(username, password, None, coleccion_usuarios)
-        valido, resultado = usuario.verificar()
-        if valido:
-            rol = resultado.strip().lower()
+        valido, rol = self.controlador.verificar_login(username, password) #verifica credenciales y lo manda al controlador
+        if valido: #si es valido va a asiganarle un rol
+            rol = rol.strip().lower()
             if rol == "imagenes":
                 self.abrir_menu(ImagenMenu)
             elif rol == "señales":
@@ -467,6 +469,7 @@ class LoginWindow(QWidget):
                 QMessageBox.warning(self, "Error", f"Rol desconocido: {rol}")
         else:
             QMessageBox.critical(self, "Error", "Credenciales incorrectas.")
+
     def registrar_usuario(self):
         usuario = self.input_usuario.text().strip()
         contra = self.input_contra.text().strip()
@@ -487,8 +490,3 @@ class LoginWindow(QWidget):
         self.menu = ventana_clase()
         self.menu.show()
 
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    login = LoginWindow()
-    login.show()
-    sys.exit(app.exec_())
