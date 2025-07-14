@@ -219,6 +219,7 @@ class SeñalMenu(QMainWindow):
 
     def abrir_csv_view(self):
         self.csv_view = CSVView()
+        self.csv_view.setControlador(self.coordinador) # se conecta el menu de señales con el coordinador 
         self.csv_view.show()
 
     def abrir_mat_viewer(self):
@@ -373,7 +374,9 @@ class CSVView(QWidget):
         try:
             # pd.read_csv() es el comando principal de Pandas para leer un archivo CSV.
             # Automáticamente lo convierte en un DataFrame, una estructura de tabla optimizada. 
-            self.gestor_csv.cargar_csv(ruta)
+            self.gestor_csv = self.coordinador.cargar_csv(ruta)
+            self.coordinador.registrar_csv(ruta)
+
             df = self.gestor_csv.obtener_datos()
             if df is not None:
                 self.mostrar_tabla()
@@ -382,8 +385,8 @@ class CSVView(QWidget):
         except Exception as e:
                 QMessageBox.critical(self, "Error", f"No se pudo cargar el archivo:\n{e}")
 
-    def mostrar_tabla(self):
-        df = self.gestor_csv.obtener_datos()
+    def mostrar_tabla(self,df):
+        
         if df is None:
             return
         
@@ -406,7 +409,7 @@ class CSVView(QWidget):
         x_col = self.combo_x.currentText()
         y_col = self.combo_y.currentText()
         
-        x, y = self.gestor_csv.obtener_datos_columnas(x_col, y_col)
+        x, y = self.coordinador.obtener_datos_columnas(self.gestor_csv, x_col, y_col)
         if x is None or y is None:
             QMessageBox.warning(self, "Advertencia", "Datos inválidos para graficar.")
             return
