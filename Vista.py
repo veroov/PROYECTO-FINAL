@@ -215,6 +215,9 @@ class MatViewer(QWidget):
         super().__init__()
         self.setWindowTitle("Visualizador de archivo .mat")
         self.setGeometry(300, 300, 800, 600)
+         # Botón para calcular y graficar promedio tipo stem
+        self.btn_promedio = QPushButton("Calcular Promedio y Graficar Stem")
+        self.btn_promedio.clicked.connect(self.graficar_promedio_stem)
 
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
@@ -295,6 +298,26 @@ class MatViewer(QWidget):
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo graficar la señal:\n{e}")
+        #Clasificar promedio 
+    def graficar_promedio_stem(self):
+        if self.array is None:
+            QMessageBox.warning(self, "Advertencia", "Primero debes cargar una señal válida.")
+            return
+        try:
+        # Calcular el promedio sobre el eje 1 (muestras)
+            promedio = np.mean(self.array, axis=1).mean(axis=0)  # (ensayos, muestras, canales) → promedio por canal
+
+            self.ax.clear()
+            self.ax.stem(promedio)
+            self.ax.set_title("Promedio por Canal (Gráfico Stem)")
+            self.ax.set_xlabel("Canal")
+            self.ax.set_ylabel("Amplitud Promedio")
+            self.ax.grid(True)
+            self.canvas.draw()
+
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"No se pudo graficar el promedio:\n{e}")
+
 
 class CSVView(QWidget):
     def __init__(self):
