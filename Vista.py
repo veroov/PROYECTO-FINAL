@@ -89,6 +89,21 @@ class ImagenMenu(QMainWindow):
 
         self.layout_principal.addWidget(panel_controles)
         self.layout_principal.addWidget(self.canvas)
+        
+        #Se agrega  para elegir el proceso a realizar
+        self.combo_accion = QComboBox()
+        self.combo_accion.addItems([
+            "gris",
+            "hsv",
+            "ecualizar",
+            "binarizar",
+            "apertura",
+            "cierre",
+            "invertir",
+            "contar"
+        ])
+        self.layout_controles.addWidget(QLabel("Selecciona acción:"))
+        self.layout_controles.addWidget(self.combo_accion)
 
 
     def setControlador(self,c):
