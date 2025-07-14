@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import QFileDialog, QTableWidgetItem
 from Modelo import *
-from vistaa import *
+from Vista import *
 
 
 class Coordinador:
