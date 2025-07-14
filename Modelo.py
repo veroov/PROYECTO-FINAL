@@ -6,6 +6,7 @@ from pymongo.collection import Collection
 from pymongo import MongoClient
 from scipy.io import loadmat
 import pandas as pd
+import cv2
 
 #Conexión a la base de datos 
 client = MongoClient("mongodb://localhost:27017/")
