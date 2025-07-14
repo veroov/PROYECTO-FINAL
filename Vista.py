@@ -120,9 +120,6 @@ class ImagenMenu(QMainWindow):
         self.btn_cargar.setText("Cargar otra carpeta") # Cambiar texto del botón
 
     def actualizar_plano(self):
-        if not self.imagen_medica: return
-        
-        dims = self.imagen_medica.obtener_dimensiones_volumen()
         eje_actual = self.eje_group.checkedId()
         
         # Actualizar el rango del slider según el plano seleccionado
