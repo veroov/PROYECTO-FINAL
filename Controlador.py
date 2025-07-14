@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QFileDialog, QTableWidgetItem
 from Modelo import *
 from vistaa import *
 
+
 class Coordinador:
     def __init__(self, vista, modelo):
         self.vista = vista

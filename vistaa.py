@@ -13,6 +13,7 @@ from matplotlib.figure import Figure
 from scipy.io import loadmat
 import cv2
 from Modelo import coleccion_usuarios, coleccion_dicom
+from Modelo import ProcesadorImagen
 
 #Clase ImagenMenu 
 class ImagenMenu(QMainWindow):
@@ -44,11 +45,11 @@ class ImagenMenu(QMainWindow):
         # .addWidget() es el comando para añadir un componente (como un botón) a un layout.
         self.layout_controles.addWidget(self.btn_cargar)
 
-        self.btn_png = QPushButton("Mostrar imagen PNG")
-        self.btn_png.clicked.connect(self.mostrar_imagen_png)
-        self.layout_controles.addWidget(self.btn_png)
+        self.btn_procesar = QPushButton("Procesar imagen JPG/PNG")
+        self.btn_procesar.clicked.connect(self.procesar_imagen)
+        self.layout_controles.addWidget(self.btn_procesar)
 
-        self.info_label = QLabel("Por favor, cargue una carpeta DICOM para comenzar.")
+        self.info_label = QLabel("")
         self.info_label.setWordWrap(True)
         self.layout_controles.addWidget(self.info_label)
         
@@ -155,21 +156,36 @@ class ImagenMenu(QMainWindow):
             self.ax.axis('off')
             # canvas.draw() actualiza el lienzo, haciendo que el nuevo gráfico sea visible en la interfaz.
             self.canvas.draw()
-    def mostrar_imagen_png(self):
-        ruta_imagen, _ = QFileDialog.getOpenFileName(self, "Seleccionar imagen PNG", "", "Imágenes (*.png)")
-        if not ruta_imagen:
+
+    def procesar_imagen(self):
+        ruta, _ = QFileDialog.getOpenFileName(self, "Seleccionar imagen", "", "Imágenes (*.png *.jpg *.jpeg)")
+        if not ruta:
             return
 
-        imagen = cv2.imread(ruta_imagen, cv2.IMREAD_GRAYSCALE)
-        if imagen is None:
-            QMessageBox.critical(self, "Error", "No se pudo cargar la imagen.")
-            return
+        try:
+            # Crear procesador
+            procesador = ProcesadorImagen(ruta)
 
-        self.ax.clear()
-        self.ax.imshow(imagen, cmap='gray')
-        self.ax.set_title("Imagen PNG Cargada")
-        self.ax.axis('off')
-        self.canvas.draw()
+            # Aplicar transformación (puedes ir cambiando esto según la funcionalidad que quieras mostrar)
+            img_procesada = procesador.operacion_morfologica(tipo="cierre", tam_kernel=5)
+
+            # Mostrar en el canvas
+            self.ax.clear()
+            if len(img_procesada.shape) == 2:  # blanco y negro
+                self.ax.imshow(img_procesada, cmap='gray')
+            else:
+                self.ax.imshow(cv2.cvtColor(img_procesada, cv2.COLOR_BGR2RGB))
+            self.ax.set_title("Imagen Procesada")
+            self.ax.axis('off')
+            self.canvas.draw()
+
+            # Opcional: Mostrar número de células
+            conteo = procesador.contar_celulas()
+            QMessageBox.information(self, "Conteo de Células", f"Se detectaron {conteo} células.")
+
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"No se pudo procesar la imagen:\n{e}")
+
 
 class SeñalMenu(QMainWindow):
     def __init__(self):
