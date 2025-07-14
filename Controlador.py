@@ -63,7 +63,7 @@ class Coordinador:
         self.modelo.graficar_dispersion(x, y, plt)
         plt.show()
     
-   def procesar_imagen(self, ruta, accion, tam_kernel=5, umbral=127):
+    def procesar_imagen(self, ruta, accion, tam_kernel=5, umbral=127):
         self.procesador = ProcesadorImagen(ruta)
 
         if accion == "gris":
@@ -85,7 +85,7 @@ class Coordinador:
             return None, total  # Solo retorna el conteo
         else:
             raise ValueError(f"Acción '{accion}' no reconocida.")
- 
+        return img, None
 def main():
     app = QApplication(sys.argv)
 
