@@ -9,6 +9,9 @@ class Coordinador:
     def __init__(self, vista, modelo):
         self.vista = vista
         self.modelo = modelo
+        self.procesador = None
+        self.conectar_eventos()
+
 
     #recibe los datos del usuario desde la vista y los pasa al modelo
     def verificar_login(self, usuario, contraseña): #pasa como parametros el usuario y la contraseña 
@@ -49,12 +52,6 @@ class Coordinador:
         self.modelo.graficar_dispersion(x, y, plt)
         plt.show()
     
-class CoordinadorImagen:
-    def __init__(self, vista):
-        self.vista = vista
-        self.procesador = None
-        self.conectar_eventos()
-
     def conectar_eventos(self):
         self.vista.btn_cargar.clicked.connect(self.cargar_imagen)
         self.vista.btn_procesar.clicked.connect(self.procesar_imagen)
@@ -102,8 +99,7 @@ class CoordinadorImagen:
             img = self.procesador.segmentar_kmeans()
         else:
             QMessageBox.warning(self.vista, "Acción desconocida", "La acción seleccionada no es válida.")
-            return
-
+            return 
         self.mostrar_imagen(img)
 
 def main():
