@@ -9,6 +9,7 @@ class Coordinador:
     def __init__(self, vista, modelo):
         self.vista = vista
         self.modelo = modelo
+        self.imagen_medica = None
 
     #recibe los datos del usuario desde la vista y los pasa al modelo
     def verificar_login(self, usuario, contraseña): #pasa como parametros el usuario y la contraseña 
@@ -17,14 +18,19 @@ class Coordinador:
     
 #selecciona la carpeta DICOM y carga los archivos DICOM en la base de datos
     def seleccionar_archivo(self, carpeta):
-        imagen = ImagenMedica(carpeta, coleccion_dicom)
-        imagen.cargar_dicoms()
-        imagen.guardar_en_mongo()
-        
-    def metadatos_dicom(self, carpeta):
-        imagen = ImagenMedica(carpeta, coleccion_dicom)
-        imagen.cargar_dicoms()
-        return imagen.metadatos()
+        self.imagen_medica = ImagenMedica(carpeta, coleccion_dicom)
+        return self.imagen_medica.cargar_dicoms() and self.imagen_medica.guardar_en_mongo()
+
+    def metadatos_dicom(self, carpeta): #Obtiene los metadatos de la imagen médica
+        return self.imagen_medica.metadatos()
+
+    def obtener_corte(self, eje, indice, carpeta):
+        return self.imagen_medica.obtener_corte(eje, indice)
+
+    def obtener_dimensiones(self, carpeta):
+        return self.imagen_medica.obtener_dimensiones_volumen()
+    
+
 
     def cargar_csv(self, ruta):
         self.modelo.cargar_csv(ruta)

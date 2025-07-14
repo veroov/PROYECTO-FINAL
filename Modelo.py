@@ -81,16 +81,16 @@ class ImagenMedica:
         return self._metadatos
 
     def obtener_dimensiones_volumen(self):
-        """Devuelve las dimensiones del volumen (slices, filas, columnas)."""
+        #"""Devuelve las dimensiones del volumen (slices, filas, columnas)."""
         return self.volumen.shape if self.volumen is not None else (0, 0, 0)
 
     def obtener_corte(self, eje, indice):
-        """
-        Obtiene un corte 2D del volumen.
-        eje 0: Axial (corte a lo largo de los slices)
-        eje 1: Coronal (corte a lo largo de las filas)
-        eje 2: Sagital (corte a lo largo de las columnas)
-        """
+        #"""
+       # Obtiene un corte 2D del volumen.
+        #eje 0: Axial (corte a lo largo de los slices)
+        #eje 1: Coronal (corte a lo largo de las filas)
+       # eje 2: Sagital (corte a lo largo de las columnas)
+        #"""
         if self.volumen is None:
             return None
         

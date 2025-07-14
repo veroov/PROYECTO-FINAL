@@ -101,16 +101,17 @@ class ImagenMenu(QMainWindow):
         carpeta = QFileDialog.getExistingDirectory(self, "Seleccionar carpeta DICOM")
         if carpeta:
             try:
+                self.carpeta_actual = carpeta
                 self.coordinador.seleccionar_archivo(carpeta)
-                self.mostrar_info_y_controles(carpeta)  # Activar los controles
+                self.mostrar_info_y_controles()  # Activar los controles
                 QMessageBox.information(self, "Éxito", "Carpeta DICOM cargada correctamente.")
 
             except Exception as e:
                 # QMessageBox.critical muestra una ventana emergente de error para informar al usuario.
                 QMessageBox.critical(self, "Error", f"No se pudo cargar la carpeta:\n{e}")
 
-    def mostrar_info_y_controles(self, carpeta):
-        metadatos = self.coordinador.metadatos_dicom(carpeta)
+    def mostrar_info_y_controles(self): 
+        metadatos = self.coordinador.metadatos_dicom(self.carpeta_actual)
         info_texto = "<b>Metadatos Principales:</b><br>"
         for clave, valor in metadatos.items():
             info_texto += f"<b>{clave}:</b> {valor}<br>"
@@ -121,21 +122,20 @@ class ImagenMenu(QMainWindow):
 
     def actualizar_plano(self):
         eje_actual = self.eje_group.checkedId()
-        
+        dims = self.coordinador.obtener_dimensiones(self.carpeta_actual)
+
         # Actualizar el rango del slider según el plano seleccionado
         self.slider.setRange(0, dims[eje_actual] - 1)
         self.slider.setValue(dims[eje_actual] // 2) # Posicionar en el centro
-        self.actualizar_corte() # Mostrar la imagen del corte actual
+        self.actualizar_corte()
 
-    def actualizar_corte(self):
-        if not self.imagen_medica: return
-        
+    def actualizar_corte(self): 
         indice = self.slider.value()
         eje = self.eje_group.checkedId()
         
         # Obtener el corte desde el modelo
-        corte_2d = self.imagen_medica.obtener_corte(eje, indice)
-        
+        corte_2d = self.coordinador.obtener_corte( eje, indice, self.carpeta_actual)
+
         if corte_2d is not None:
             # Actualizar el label del slider
             total_cortes = self.slider.maximum() + 1
