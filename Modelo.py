@@ -141,7 +141,7 @@ class ProcesadorImagen:
         _, binaria = cv2.threshold(gris, 127, 255, cv2.THRESH_BINARY_INV)
         contornos, _ = cv2.findContours(binaria, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         return len(contornos)
-    def invertir_imagen(self):
+    def invertir_imagen(self): # método no visto en clase  de opencv
         self.procesada = cv2.bitwise_not(self.original)
         return self.procesada
         
