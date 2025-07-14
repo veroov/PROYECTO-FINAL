@@ -14,14 +14,17 @@ class Coordinador:
     def verificar_login(self, usuario, contraseña): #pasa como parametros el usuario y la contraseña 
         modelo = Usuario(usuario, contraseña, "", coleccion_usuarios)# crea un objeto Usuario con los datos ingresados
         return modelo.verificar() #devuelve el resultado de la verificación
-
+    
+#selecciona la carpeta DICOM y carga los archivos DICOM en la base de datos
     def seleccionar_archivo(self, carpeta):
-        carpeta = QFileDialog.getOpenFileName(self.vista, "Selecciona un archivo CSV", "", "CSV files (*.csv)")
-        if carpeta:
-            imagen = ImagenMedica(carpeta, coleccion_dicom)
-            imagen.cargar_dicoms()
-            imagen.guardar_en_mongo()
-            print("DICOM cargado correctamente") 
+        imagen = ImagenMedica(carpeta, coleccion_dicom)
+        imagen.cargar_dicoms()
+        imagen.guardar_en_mongo()
+        
+    def metadatos_dicom(self, carpeta):
+        imagen = ImagenMedica(carpeta, coleccion_dicom)
+        imagen.cargar_dicoms()
+        return imagen.metadatos()
 
     def cargar_csv(self, ruta):
         self.modelo.cargar_csv(ruta)

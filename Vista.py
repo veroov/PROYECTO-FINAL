@@ -102,13 +102,15 @@ class ImagenMenu(QMainWindow):
         if carpeta:
             try:
                 self.coordinador.seleccionar_archivo(carpeta)
-               
+                self.mostrar_info_y_controles(carpeta)  # Activar los controles
+                QMessageBox.information(self, "Éxito", "Carpeta DICOM cargada correctamente.")
+
             except Exception as e:
                 # QMessageBox.critical muestra una ventana emergente de error para informar al usuario.
                 QMessageBox.critical(self, "Error", f"No se pudo cargar la carpeta:\n{e}")
 
-    def mostrar_info_y_controles(self):
-        metadatos = self.imagen_medica.metadatos()
+    def mostrar_info_y_controles(self, carpeta):
+        metadatos = self.coordinador.metadatos_dicom(carpeta)
         info_texto = "<b>Metadatos Principales:</b><br>"
         for clave, valor in metadatos.items():
             info_texto += f"<b>{clave}:</b> {valor}<br>"
