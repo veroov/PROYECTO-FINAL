@@ -48,6 +48,63 @@ class Coordinador:
         y = self.vista.combo_y.currentText()
         self.modelo.graficar_dispersion(x, y, plt)
         plt.show()
+    
+class CoordinadorImagen:
+    def __init__(self, vista):
+        self.vista = vista
+        self.procesador = None
+        self.conectar_eventos()
+
+    def conectar_eventos(self):
+        self.vista.btn_cargar.clicked.connect(self.cargar_imagen)
+        self.vista.btn_procesar.clicked.connect(self.procesar_imagen)
+
+    def cargar_imagen(self):
+        ruta, _ = QFileDialog.getOpenFileName(self.vista, "Seleccionar imagen", "", "Imagenes (*.jpg *.png)")
+        if ruta:
+            self.procesador = ProcesadorImagen(ruta)
+            self.mostrar_imagen(self.procesador.original)
+
+            # Registrar en MongoDB
+            nombre = os.path.basename(ruta)
+            tipo = os.path.splitext(nombre)[1].replace(".", "")  # jpg o png
+            registro = RegistroArchivo(tipo, nombre, ruta, coleccion_archivos)
+            registro.guardar()
+
+            self.vista.imagen_path = ruta  # Guardar la ruta por si la necesitas
+
+    def procesar_imagen(self):
+        if not self.procesador:
+            QMessageBox.warning(self.vista, "Advertencia", "Primero debes cargar una imagen.")
+            return
+
+        accion = self.vista.combo_accion.currentText().lower()
+
+        if accion == "gris":
+            img = self.procesador.cambiar_espacio_color("gris")
+        elif accion == "hsv":
+            img = self.procesador.cambiar_espacio_color("hsv")
+        elif accion == "ecualizar":
+            img = self.procesador.ecualizar()
+        elif accion == "binarizar":
+            img = self.procesador.binarizar()
+        elif accion == "apertura":
+            img = self.procesador.operacion_morfologica("apertura")
+        elif accion == "cierre":
+            img = self.procesador.operacion_morfologica("cierre")
+        elif accion == "invertir":
+            img = self.procesador.invertir_imagen()
+        elif accion == "contar células":
+            total = self.procesador.contar_celulas()
+            QMessageBox.information(self.vista, "Resultado", f"Se detectaron {total} objetos/células.")
+            return
+        elif accion == "segmentar k-means":
+            img = self.procesador.segmentar_kmeans()
+        else:
+            QMessageBox.warning(self.vista, "Acción desconocida", "La acción seleccionada no es válida.")
+            return
+
+        self.mostrar_imagen(img)
 
 def main():
     app = QApplication(sys.argv)
