@@ -90,8 +90,10 @@ class ImagenMenu(QMainWindow):
         self.layout_principal.addWidget(panel_controles)
         self.layout_principal.addWidget(self.canvas)
 
+
     def setControlador(self,c):
         self.coordinador = c
+
 
 
     def seleccionar_carpeta(self):
