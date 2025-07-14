@@ -86,6 +86,24 @@ class Coordinador:
         else:
             raise ValueError(f"Acción '{accion}' no reconocida.")
         return img, None
+    def cargar_csv(self, ruta):
+        gestor = GestorCSV()
+        gestor.cargar_csv(ruta)
+        return gestor
+
+    def obtener_columnas_csv(self, gestor):
+        return gestor.obtener_columnas()
+
+    def obtener_datos_columnas(self, gestor, col_x, col_y):
+        return gestor.obtener_datos_columnas(col_x, col_y)
+
+    def registrar_csv(self, ruta):
+        nombre = os.path.basename(ruta)
+        registro = RegistroArchivo("csv", nombre, ruta,coleccion_archivos)
+        registro.guardar()
+
+
+
 def main():
     app = QApplication(sys.argv)
 
