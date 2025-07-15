@@ -31,7 +31,7 @@ class Coordinador:
     def metadatos_dicom(self, carpeta): #Obtiene los metadatos de la imagen médica
         return self.imagen_medica.metadatos()
     
-    def guardar_paciente(self, carpeta):
+    def guardar_paciente(self, carpeta): #carpeta está presente porque está en imagenMedica como parametro, si lo quito sale error
         return self.imagen_medica.guardar_paciente()
 
     def obtener_corte(self, eje, indice, carpeta):

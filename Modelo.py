@@ -8,6 +8,7 @@ from scipy.io import loadmat
 import pandas as pd
 import cv2
 import dicom2nifti
+import nibabel as nib
 
 #Conexión a la base de datos 
 client = MongoClient("mongodb://localhost:27017/")
@@ -88,8 +89,6 @@ class ImagenMedica:
         else:
             print("Este NIfTI ya fue guardado anteriormente.")
 
-        
-
     def guardar_paciente(self):
         if not self._metadatos:
             print("No hay metadatos para guardar. Carga los DICOMs primero.")
@@ -131,6 +130,7 @@ class ImagenMedica:
         elif eje == 2:  # Plano Sagital
             return self.volumen[:, :, indice]
         return None
+    
 class ProcesadorImagen:
     def __init__(self, ruta):
         self.ruta = ruta
