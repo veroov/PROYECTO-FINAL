@@ -216,6 +216,14 @@ class SeñalMenu(QMainWindow):
         widget.setLayout(self.layout)
         self.setCentralWidget(widget)
 
+        self.btn_volver = QPushButton("Volver al Login")
+        self.btn_volver.setFixedHeight(30)  
+        self.btn_volver.setStyleSheet("""
+            QPushButton {  background-color: #007acc; color: white; border-radius: 4px; font-size: 12px; padding: 4px 8px;}
+            QPushButton:hover { background-color: #005c99;   } """)
+        self.btn_volver.clicked.connect(self.volver_al_login)
+        self.layout.addWidget(self.btn_volver)
+
     def abrir_csv_view(self):
         self.csv_view = CSVView()
         self.csv_view.setControlador(self.coordinador) # se conecta el menu de señales con el coordinador 
@@ -224,10 +232,15 @@ class SeñalMenu(QMainWindow):
     def abrir_mat_viewer(self):
         self.mat_viewer = MatViewer()
         self.mat_viewer.show()
+
+    def volver_al_login(self):
+        self.close()
+        self.login = LoginWindow()
+        self.login.asignarCoordinador(self.coordinador)
+        self.login.show()
+
     def setControlador(self, c):
         self.coordinador = c
-
-
 class MatViewer(QWidget):
     def __init__(self):
         super().__init__()
@@ -335,8 +348,7 @@ class MatViewer(QWidget):
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo graficar el promedio:\n{e}")
-
-
+            
 class CSVView(QWidget):
     def __init__(self):
         super().__init__()
