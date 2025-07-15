@@ -254,10 +254,6 @@ class ImagenMenu(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo procesar la imagen:\n{e}")
 
-        
-
-
-
 class SeñalMenu(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -286,6 +282,15 @@ class SeñalMenu(QMainWindow):
         self.btn_csv.clicked.connect(self.abrir_csv_view)
         layout_inicio.addWidget(self.btn_csv)
 
+        self.btn_volver = QPushButton("Volver al Login")
+        self.btn_volver.setFixedHeight(30)
+        self.btn_volver.setStyleSheet("""
+            QPushButton { background-color: #007acc; color: white; border-radius: 4px; font-size: 12px; padding: 4px 8px; }
+            QPushButton:hover { background-color: #005c99; }
+        """)
+        self.btn_volver.clicked.connect(self.volver_a_login)
+        layout_inicio.addWidget(self.btn_volver)
+
         self.stack.addWidget(self.vista_inicial)
         self.stack.setCurrentWidget(self.vista_inicial)
 
@@ -294,7 +299,7 @@ class SeñalMenu(QMainWindow):
         self.stack.addWidget(self.mat_viewer)
 
     def agregar_boton_volver(self, vista):
-        boton_volver =QPushButton("Volver al Login")
+        boton_volver =QPushButton("Volver")
         boton_volver.setFixedHeight(30)  
         boton_volver.setStyleSheet("""
             QPushButton {  background-color: #007acc; color: white; border-radius: 4px; font-size: 12px; padding: 4px 8px;}
@@ -314,6 +319,13 @@ class SeñalMenu(QMainWindow):
 
     def abrir_mat_viewer(self):
         self.stack.setCurrentWidget(self.mat_viewer)
+
+    def volver_a_login(self):
+        self.close()
+        from Vista import LoginWindow  
+        self.login = LoginWindow()
+        self.login.asignarCoordinador(self.coordinador)
+        self.login.show()
 
     def setControlador(self, c):
         self.coordinador = c
