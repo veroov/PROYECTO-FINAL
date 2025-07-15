@@ -166,7 +166,7 @@ class ImagenMenu(QMainWindow):
             # canvas.draw() actualiza el lienzo, haciendo que el nuevo gráfico sea visible en la interfaz.
             self.canvas.draw()
 
- def procesar_imagen(self):
+    def procesar_imagen(self):
         ruta, _ = QFileDialog.getOpenFileName(self, "Seleccionar imagen", "", "Imágenes (*.png *.jpg *.jpeg)")
         if not ruta:
             return
