@@ -340,13 +340,6 @@ class SeñalMenu(QMainWindow):
 
     def setControlador(self, c):
         self.coordinador = c
-<<<<<<< HEAD
-        if self.csv_view:
-            self.csv_view.setControlador(c)
-        
-=======
-
->>>>>>> c16cfce270a75068f87046a7d4bdd7a7447d9e0c
 class MatViewer(QWidget):
     def __init__(self):
         super().__init__()
