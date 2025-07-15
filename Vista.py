@@ -427,6 +427,9 @@ class CSVView(QWidget):
         self.figure = Figure(figsize=(5, 3))
         self.canvas = FigureCanvas(self.figure)
         self.layout.addWidget(self.canvas)
+
+    def setControlador(self,c):
+        self.coordinador = c
         
     def cargar_csv(self):
         ruta, _ = QFileDialog.getOpenFileName(self, "Seleccionar CSV", "", "CSV Files (*.csv)")

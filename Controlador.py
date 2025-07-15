@@ -100,6 +100,7 @@ class Coordinador:
         else:
             raise ValueError(f"Acción '{accion}' no reconocida.")
         return img, None
+    
     def cargar_csv(self, ruta):
         gestor = GestorCSV()
         gestor.cargar_csv(ruta)
