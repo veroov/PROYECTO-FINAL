@@ -107,11 +107,25 @@ class ImagenMenu(QMainWindow):
         self.layout_controles.addWidget(QLabel("Selecciona acción:"))
         self.layout_controles.addWidget(self.combo_accion)
 
+        self.btn_volver = QPushButton("Volver al Login")
+
+        self.btn_volver.setFixedHeight(30)
+        self.btn_volver.setStyleSheet("""
+            QPushButton {background-color: #007acc; color: white; border-radius: 4px; font-size: 12px; padding: 4px 8px;}
+            QPushButton:hover { background-color: #005c99; } """)
+        self.btn_volver.clicked.connect(self.volver_al_login)
+        self.layout_controles.addSpacing(15)  
+        self.layout_controles.addWidget(self.btn_volver)
+
+    def volver_al_login(self):
+        self.close()
+        self.login = LoginWindow()
+        self.login.asignarCoordinador(self.coordinador)
+        self.login.show()
+
 
     def setControlador(self,c):
         self.coordinador = c
-
-
 
     def seleccionar_carpeta(self):
         # QFileDialog.getExistingDirectory abre un diálogo nativo del sistema para que el usuario elija una carpeta.
