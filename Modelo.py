@@ -12,6 +12,7 @@ import cv2
 client = MongoClient("mongodb://localhost:27017/")
 db = client["Bioingenieria"]
 coleccion_usuarios = db["Usuarios"]
+coleccion = db['Pacientes']
 coleccion_dicom = db["Dicom_nifti"]
 class Usuario:
     def __init__(self, usuario, contraseña, rol, coleccion: Collection):
