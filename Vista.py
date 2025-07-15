@@ -5,6 +5,7 @@ QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
     QTableWidgetItem, QSlider, QRadioButton, QButtonGroup, QGroupBox, QStackedWidget
 )
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap
 import pandas as pd
 import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -12,7 +13,8 @@ from matplotlib.figure import Figure
 from scipy.io import loadmat
 import cv2
 from Modelo import coleccion_usuarios, coleccion_dicom
-from Modelo import ProcesadorImagen, GestorSeñales, GestorCSV  
+from Modelo import ProcesadorImagen, GestorSeñales, GestorCSV,Usuario  
+import os
 
 #Clase ImagenMenu 
 class ImagenMenu(QMainWindow):
@@ -105,11 +107,25 @@ class ImagenMenu(QMainWindow):
         self.layout_controles.addWidget(QLabel("Selecciona acción:"))
         self.layout_controles.addWidget(self.combo_accion)
 
+        self.btn_volver = QPushButton("Volver al Login")
+
+        self.btn_volver.setFixedHeight(30)
+        self.btn_volver.setStyleSheet("""
+            QPushButton {background-color: #007acc; color: white; border-radius: 4px; font-size: 12px; padding: 4px 8px;}
+            QPushButton:hover { background-color: #005c99; } """)
+        self.btn_volver.clicked.connect(self.volver_al_login)
+        self.layout_controles.addSpacing(15)  
+        self.layout_controles.addWidget(self.btn_volver)
+
+    def volver_al_login(self):
+        self.close()
+        self.login = LoginWindow()
+        self.login.asignarCoordinador(self.coordinador)
+        self.login.show()
+
 
     def setControlador(self,c):
         self.coordinador = c
-
-
 
     def seleccionar_carpeta(self):
         # QFileDialog.getExistingDirectory abre un diálogo nativo del sistema para que el usuario elija una carpeta.
@@ -172,25 +188,22 @@ class ImagenMenu(QMainWindow):
             return
 
         try:
-            # Crear procesador
-            procesador = ProcesadorImagen(ruta)
+            accion = self.combo_accion.currentText().lower()
+            img_procesada, conteo = self.coordinador.procesar_imagen(ruta, accion)
 
-            # Aplicar transformación (puedes ir cambiando esto según la funcionalidad que quieras mostrar)
-            img_procesada = procesador.operacion_morfologica(tipo="cierre", tam_kernel=5)
+            if accion == "contar":
+                QMessageBox.information(self, "Conteo de Células", f"Se detectaron {conteo} células.")
+                return
 
-            # Mostrar en el canvas
+        # Mostrar en el canvas
             self.ax.clear()
             if len(img_procesada.shape) == 2:  # blanco y negro
                 self.ax.imshow(img_procesada, cmap='gray')
             else:
                 self.ax.imshow(cv2.cvtColor(img_procesada, cv2.COLOR_BGR2RGB))
-            self.ax.set_title("Imagen Procesada")
+            self.ax.set_title(f"Imagen procesada: {accion}")
             self.ax.axis('off')
             self.canvas.draw()
-
-            # Opcional: Mostrar número de células
-            conteo = procesador.contar_celulas()
-            QMessageBox.information(self, "Conteo de Células", f"Se detectaron {conteo} células.")
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo procesar la imagen:\n{e}")
@@ -217,6 +230,14 @@ class SeñalMenu(QMainWindow):
         widget.setLayout(self.layout)
         self.setCentralWidget(widget)
 
+        self.btn_volver = QPushButton("Volver al Login")
+        self.btn_volver.setFixedHeight(30)  
+        self.btn_volver.setStyleSheet("""
+            QPushButton {  background-color: #007acc; color: white; border-radius: 4px; font-size: 12px; padding: 4px 8px;}
+            QPushButton:hover { background-color: #005c99;   } """)
+        self.btn_volver.clicked.connect(self.volver_al_login)
+        self.layout.addWidget(self.btn_volver)
+
     def abrir_csv_view(self):
         self.csv_view = CSVView()
         self.csv_view.setControlador(self.coordinador) # se conecta el menu de señales con el coordinador 
@@ -226,6 +247,14 @@ class SeñalMenu(QMainWindow):
         self.mat_viewer = MatViewer()
         self.mat_viewer.show()
 
+    def volver_al_login(self):
+        self.close()
+        self.login = LoginWindow()
+        self.login.asignarCoordinador(self.coordinador)
+        self.login.show()
+
+    def setControlador(self, c):
+        self.coordinador = c
 class MatViewer(QWidget):
     def __init__(self):
         super().__init__()
@@ -333,8 +362,7 @@ class MatViewer(QWidget):
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo graficar el promedio:\n{e}")
-
-
+            
 class CSVView(QWidget):
     def __init__(self):
         super().__init__()
@@ -382,7 +410,7 @@ class CSVView(QWidget):
 
             df = self.gestor_csv.obtener_datos()
             if df is not None:
-                self.mostrar_tabla()
+                self.mostrar_tabla(df)
                 self.llenar_combos()
 
         except Exception as e:
@@ -427,6 +455,8 @@ class CSVView(QWidget):
             self.canvas.draw()
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo graficar:\n{e}")
+    def setControlador(self,c):
+            self.coordinador = c
 
 class LoginWindow(QWidget):
     def __init__(self):
@@ -442,7 +472,15 @@ class LoginWindow(QWidget):
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
         self.mostrar_opciones_iniciales()
+
     def mostrar_opciones_iniciales(self):
+
+        logo = QLabel()
+        ruta_logo = os.path.join("logo", "logo.png")
+        logo.setPixmap(QPixmap(ruta_logo).scaled(100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        logo.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(logo)
+
         titulo = QLabel("Bienvenido a GenEraVid")
         titulo.setStyleSheet("font-size: 20px; font-weight: bold; color: #2c3e50;")
         titulo.setAlignment(Qt.AlignCenter)
