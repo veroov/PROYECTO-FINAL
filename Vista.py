@@ -96,7 +96,10 @@ class ImagenMenu(QMainWindow):
         self.layout_principal.addWidget(panel_controles)
         self.layout_principal.addWidget(self.canvas)
         
-        #Se agrega  para elegir el proceso a realizar
+        # Crear QLabel y QComboBox, inicialmente ocultos
+        self.label_accion = QLabel("Selecciona acción:")
+        self.label_accion.setVisible(False)  # Oculto al inicio
+
         self.combo_accion = QComboBox()
         self.combo_accion.addItems([
             "gris",
@@ -108,7 +111,10 @@ class ImagenMenu(QMainWindow):
             "invertir",
             "contar"
         ])
-        self.layout_controles.addWidget(QLabel("Selecciona acción:"))
+        self.combo_accion.setVisible(False)  # Oculto al inicio
+
+        # Agregar al layout
+        self.layout_controles.addWidget(self.label_accion)
         self.layout_controles.addWidget(self.combo_accion)
 
         self.btn_volver = QPushButton("Volver al Login")
@@ -135,6 +141,8 @@ class ImagenMenu(QMainWindow):
     def seleccionar_carpeta(self):
         # QFileDialog.getExistingDirectory abre un diálogo nativo del sistema para que el usuario elija una carpeta.
         carpeta_actual = QFileDialog.getExistingDirectory(self, "Seleccionar carpeta DICOM")
+        self.label_accion.setVisible(False)
+        self.combo_accion.setVisible(False)
         if carpeta_actual:
             try:
                 self.carpeta_actual = carpeta_actual
@@ -199,8 +207,11 @@ class ImagenMenu(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo convertir a NIfTI:\n{e}")
 
+
     def procesar_imagen(self):
         ruta, _ = QFileDialog.getOpenFileName(self, "Seleccionar imagen", "", "Imágenes (*.png *.jpg *.jpeg)")
+        self.label_accion.setVisible(True)
+        self.combo_accion.setVisible(True)
         if not ruta:
             return
 
@@ -329,9 +340,13 @@ class SeñalMenu(QMainWindow):
 
     def setControlador(self, c):
         self.coordinador = c
+<<<<<<< HEAD
         if self.csv_view:
             self.csv_view.setControlador(c)
         
+=======
+
+>>>>>>> c16cfce270a75068f87046a7d4bdd7a7447d9e0c
 class MatViewer(QWidget):
     def __init__(self):
         super().__init__()
