@@ -89,6 +89,21 @@ class ImagenMenu(QMainWindow):
 
         self.layout_principal.addWidget(panel_controles)
         self.layout_principal.addWidget(self.canvas)
+        
+        #Se agrega  para elegir el proceso a realizar
+        self.combo_accion = QComboBox()
+        self.combo_accion.addItems([
+            "gris",
+            "hsv",
+            "ecualizar",
+            "binarizar",
+            "apertura",
+            "cierre",
+            "invertir",
+            "contar"
+        ])
+        self.layout_controles.addWidget(QLabel("Selecciona acción:"))
+        self.layout_controles.addWidget(self.combo_accion)
 
 
     def setControlador(self,c):
@@ -204,6 +219,7 @@ class SeñalMenu(QMainWindow):
 
     def abrir_csv_view(self):
         self.csv_view = CSVView()
+        self.csv_view.setControlador(self.coordinador) # se conecta el menu de señales con el coordinador 
         self.csv_view.show()
 
     def abrir_mat_viewer(self):
@@ -215,6 +231,9 @@ class MatViewer(QWidget):
         super().__init__()
         self.setWindowTitle("Visualizador de archivo .mat")
         self.setGeometry(300, 300, 800, 600)
+         # Botón para calcular y graficar promedio tipo stem
+        self.btn_promedio = QPushButton("Calcular Promedio y Graficar Stem")
+        self.btn_promedio.clicked.connect(self.graficar_promedio_stem)
 
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
@@ -295,6 +314,26 @@ class MatViewer(QWidget):
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo graficar la señal:\n{e}")
+        #Clasificar promedio 
+    def graficar_promedio_stem(self):
+        if self.array is None:
+            QMessageBox.warning(self, "Advertencia", "Primero debes cargar una señal válida.")
+            return
+        try:
+        # Calcular el promedio sobre el eje 1 (muestras)
+            promedio = np.mean(self.array, axis=1).mean(axis=0)  # (ensayos, muestras, canales) → promedio por canal
+
+            self.ax.clear()
+            self.ax.stem(promedio)
+            self.ax.set_title("Promedio por Canal (Gráfico Stem)")
+            self.ax.set_xlabel("Canal")
+            self.ax.set_ylabel("Amplitud Promedio")
+            self.ax.grid(True)
+            self.canvas.draw()
+
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"No se pudo graficar el promedio:\n{e}")
+
 
 class CSVView(QWidget):
     def __init__(self):
@@ -335,7 +374,9 @@ class CSVView(QWidget):
         try:
             # pd.read_csv() es el comando principal de Pandas para leer un archivo CSV.
             # Automáticamente lo convierte en un DataFrame, una estructura de tabla optimizada. 
-            self.gestor_csv.cargar_csv(ruta)
+            self.gestor_csv = self.coordinador.cargar_csv(ruta)
+            self.coordinador.registrar_csv(ruta)
+
             df = self.gestor_csv.obtener_datos()
             if df is not None:
                 self.mostrar_tabla()
@@ -344,8 +385,8 @@ class CSVView(QWidget):
         except Exception as e:
                 QMessageBox.critical(self, "Error", f"No se pudo cargar el archivo:\n{e}")
 
-    def mostrar_tabla(self):
-        df = self.gestor_csv.obtener_datos()
+    def mostrar_tabla(self,df):
+        
         if df is None:
             return
         
@@ -368,7 +409,7 @@ class CSVView(QWidget):
         x_col = self.combo_x.currentText()
         y_col = self.combo_y.currentText()
         
-        x, y = self.gestor_csv.obtener_datos_columnas(x_col, y_col)
+        x, y = self.coordinador.obtener_datos_columnas(self.gestor_csv, x_col, y_col)
         if x is None or y is None:
             QMessageBox.warning(self, "Advertencia", "Datos inválidos para graficar.")
             return
