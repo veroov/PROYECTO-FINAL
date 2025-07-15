@@ -3,6 +3,11 @@ from PyQt5.QtWidgets import QFileDialog, QTableWidgetItem
 from Modelo import *
 from Vista import *
 
+from Modelo import (
+    Usuario, ImagenMedica, ProcesadorImagen, GestorSeñales, GestorCSV, RegistroArchivo,
+    coleccion_usuarios, coleccion_dicom, coleccion_archivos
+)
+from Vista import LoginWindow
 
 #la ventana ya no se abre en vista, porque investigue y se debia abrir desde el controlador
 class Coordinador:
@@ -37,8 +42,17 @@ class Coordinador:
 
     def obtener_dimensiones(self, carpeta):
         return self.imagen_medica.obtener_dimensiones_volumen()
-    
 
+    def cargar_mat(self, ruta):
+        # El controlador usa su instancia del gestor de señales para cargar el archivo.
+        llaves = self.gestor_senales.cargar_mat(ruta)
+        nombre_archivo = os.path.basename(ruta)
+        registro = RegistroArchivo("mat", nombre_archivo, ruta, coleccion_archivos)
+        registro.guardar()
+        return llaves
+    
+    def obtener_senal(self, llave):
+        return self.gestor_senales.obtener_senal(llave)    
 
     def cargar_csv(self, ruta):
         self.modelo.cargar_csv(ruta)
