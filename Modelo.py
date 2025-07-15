@@ -147,7 +147,6 @@ class ProcesadorImagen:
     def invertir_imagen(self): # método no visto en clase  de opencv
         self.procesada = cv2.bitwise_not(self.original)
         return self.procesada
-        
 class GestorSeñales:
     def __init__(self):
         self.datos_mat = {}
@@ -162,7 +161,6 @@ class GestorSeñales:
         if llave in self.datos_mat:
             return np.squeeze(self.datos_mat[llave])
         return None
-
 class GestorCSV:
     def __init__(self):
         self.df = None
@@ -190,7 +188,6 @@ class GestorCSV:
         if self.df is not None and col_x in self.df.columns and col_y in self.df.columns:
             return self.df[col_x], self.df[col_y]
         return None, None
-
 class RegistroArchivo:
     def __init__(self, tipo, nombre_archivo, ruta, coleccion):
         self.tipo = tipo  # Ej: "csv", "mat", "jpg"

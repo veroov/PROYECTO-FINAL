@@ -1,18 +1,17 @@
-import sys
+
 from PyQt5.QtWidgets import (
-QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
+ QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QHBoxLayout, QMessageBox, QComboBox, QFileDialog, QTableWidget,
-    QTableWidgetItem, QSlider, QRadioButton, QButtonGroup, QGroupBox, QStackedWidget
+    QTableWidgetItem, QSlider, QRadioButton, QButtonGroup, QGroupBox
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
-import pandas as pd
 import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from scipy.io import loadmat
 import cv2
-from Modelo import coleccion_usuarios, coleccion_dicom
+from Modelo import coleccion_usuarios
 from Modelo import ProcesadorImagen, GestorSeñales, GestorCSV,Usuario  
 import os
 

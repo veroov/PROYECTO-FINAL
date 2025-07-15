@@ -1,13 +1,12 @@
 import matplotlib.pyplot as plt
-from PyQt5.QtWidgets import QFileDialog, QTableWidgetItem
-from Modelo import *
+from PyQt5.QtWidgets import QFileDialog, QTableWidgetItem, QApplication
 from Vista import *
-
 from Modelo import (
     Usuario, ImagenMedica, ProcesadorImagen, GestorSeñales, GestorCSV, RegistroArchivo,
     coleccion_usuarios, coleccion_dicom, coleccion_archivos
 )
 from Vista import LoginWindow
+import sys
 
 #la ventana ya no se abre en vista, porque investigue y se debia abrir desde el controlador
 class Coordinador:
@@ -16,7 +15,6 @@ class Coordinador:
         self.modelo = modelo
         self.procesador = None
         self.senal_modelo = GestorSeñales()
-        
 
         self.imagen_medica = None
 
@@ -30,7 +28,6 @@ class Coordinador:
         self.imagen_medica = ImagenMedica(carpeta, coleccion_dicom)
         return self.imagen_medica.cargar_dicoms() 
     
-
     def metadatos_dicom(self, carpeta): #Obtiene los metadatos de la imagen médica
         return self.imagen_medica.metadatos()
     
@@ -60,7 +57,6 @@ class Coordinador:
         registro = RegistroArchivo("csv", nombre, ruta, coleccion_archivos)
         registro.guardar()
         
-
     def mostrar_tabla(self):
         df = self.modelo.obtener_datos()
         self.vista.tabla.setRowCount(len(df))
@@ -117,8 +113,6 @@ class Coordinador:
         registro = RegistroArchivo("csv", nombre, ruta,coleccion_archivos)
         registro.guardar()
 
-
-
 def main():
     app = QApplication(sys.argv)
 
@@ -130,7 +124,6 @@ def main():
 
     vista.show()
     sys.exit(app.exec_())
-
 
 if __name__ == "__main__":
     main()
