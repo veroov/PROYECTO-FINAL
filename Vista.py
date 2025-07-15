@@ -166,31 +166,28 @@ class ImagenMenu(QMainWindow):
             # canvas.draw() actualiza el lienzo, haciendo que el nuevo gráfico sea visible en la interfaz.
             self.canvas.draw()
 
-    def procesar_imagen(self):
+ def procesar_imagen(self):
         ruta, _ = QFileDialog.getOpenFileName(self, "Seleccionar imagen", "", "Imágenes (*.png *.jpg *.jpeg)")
         if not ruta:
             return
 
         try:
-            # Crear procesador
-            procesador = ProcesadorImagen(ruta)
+            accion = self.combo_accion.currentText().lower()
+            img_procesada, conteo = self.coordinador.procesar_imagen(ruta, accion)
 
-            # Aplicar transformación (puedes ir cambiando esto según la funcionalidad que quieras mostrar)
-            img_procesada = procesador.operacion_morfologica(tipo="cierre", tam_kernel=5)
+            if accion == "contar":
+                QMessageBox.information(self, "Conteo de Células", f"Se detectaron {conteo} células.")
+                return
 
-            # Mostrar en el canvas
+        # Mostrar en el canvas
             self.ax.clear()
             if len(img_procesada.shape) == 2:  # blanco y negro
                 self.ax.imshow(img_procesada, cmap='gray')
             else:
                 self.ax.imshow(cv2.cvtColor(img_procesada, cv2.COLOR_BGR2RGB))
-            self.ax.set_title("Imagen Procesada")
+            self.ax.set_title(f"Imagen procesada: {accion}")
             self.ax.axis('off')
             self.canvas.draw()
-
-            # Opcional: Mostrar número de células
-            conteo = procesador.contar_celulas()
-            QMessageBox.information(self, "Conteo de Células", f"Se detectaron {conteo} células.")
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo procesar la imagen:\n{e}")
@@ -225,6 +222,9 @@ class SeñalMenu(QMainWindow):
     def abrir_mat_viewer(self):
         self.mat_viewer = MatViewer()
         self.mat_viewer.show()
+    def setControlador(self, c):
+        self.coordinador = c
+
 
 class MatViewer(QWidget):
     def __init__(self):
