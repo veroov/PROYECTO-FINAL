@@ -5,6 +5,7 @@ QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
     QTableWidgetItem, QSlider, QRadioButton, QButtonGroup, QGroupBox, QStackedWidget
 )
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap
 import pandas as pd
 import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -13,6 +14,7 @@ from scipy.io import loadmat
 import cv2
 from Modelo import coleccion_usuarios, coleccion_dicom
 from Modelo import ProcesadorImagen, GestorSeñales, GestorCSV,Usuario  
+import os
 
 #Clase ImagenMenu 
 class ImagenMenu(QMainWindow):
@@ -441,7 +443,15 @@ class LoginWindow(QWidget):
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
         self.mostrar_opciones_iniciales()
+
     def mostrar_opciones_iniciales(self):
+
+        logo = QLabel()
+        ruta_logo = os.path.join("logo", "logo.png")
+        logo.setPixmap(QPixmap(ruta_logo).scaled(100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        logo.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(logo)
+
         titulo = QLabel("Bienvenido a GenEraVid")
         titulo.setStyleSheet("font-size: 20px; font-weight: bold; color: #2c3e50;")
         titulo.setAlignment(Qt.AlignCenter)
