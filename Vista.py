@@ -562,7 +562,7 @@ class LoginWindow(QWidget):
 
         logo = QLabel()
         ruta_logo = os.path.join("logo", "logo.png")
-        logo.setPixmap(QPixmap(ruta_logo).scaled(100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        logo.setPixmap(QPixmap(ruta_logo).scaled(160, 160, Qt.KeepAspectRatio, Qt.SmoothTransformation))
         logo.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(logo)
 
