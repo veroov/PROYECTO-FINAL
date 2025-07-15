@@ -7,6 +7,7 @@ from pymongo import MongoClient
 from scipy.io import loadmat
 import pandas as pd
 import cv2
+import dicom2nifti
 
 #Conexión a la base de datos 
 client = MongoClient("mongodb://localhost:27017/")
@@ -62,9 +63,32 @@ class ImagenMedica:
             "ID del Paciente": primer_slice.PatientID,
             "Modalidad": primer_slice.Modality,
             "Dimensiones": f"{primer_slice.Rows}x{primer_slice.Columns}",
-            "Número de Slices": len(self.slices)
+            "Número de Slices": len(self.slices),
+            "Tipo de Archivo": "DICOM"
         }
         return True
+    
+    def convertir_a_nifti_y_guardar(self, ruta_salida):
+        self.cargar_dicoms()
+        dicom2nifti.convert_directory(self.carpeta, ruta_salida)
+        # Buscar el archivo .nii o .nii.gz recién creado
+        archivos_nifti = [f for f in os.listdir(ruta_salida) if f.endswith('.nii') or f.endswith('.nii.gz')]
+        if not archivos_nifti:
+            print("No se generó ningún archivo NIfTI.")
+            return
+        ruta_nifti = os.path.join(ruta_salida, archivos_nifti[0])  # Tomamos el primero
+        datos_a_guardar = self._metadatos.copy()
+        datos_a_guardar["ruta_carpeta"] = self.carpeta
+        datos_a_guardar["ruta_nifti"] = ruta_nifti
+        datos_a_guardar["Tipo de Archivo"] = "NIfTI"
+
+        if not self.coleccion.find_one({"ruta_nifti": ruta_nifti}):
+            self.coleccion.insert_one(datos_a_guardar)
+            print("NIfTI y metadatos guardados en MongoDB.")
+        else:
+            print("Este NIfTI ya fue guardado anteriormente.")
+
+        
 
     def guardar_paciente(self):
         if not self._metadatos:

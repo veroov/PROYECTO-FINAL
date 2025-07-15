@@ -39,6 +39,9 @@ class Coordinador:
 
     def obtener_dimensiones(self, carpeta):
         return self.imagen_medica.obtener_dimensiones_volumen()
+    
+    def convertir_a_nifti_y_guardar(self, carpeta, ruta_salida):
+        return self.imagen_medica.convertir_a_nifti_y_guardar(ruta_salida)
 
     def cargar_mat(self, ruta):
         # El controlador usa su instancia del gestor de señales para cargar el archivo.

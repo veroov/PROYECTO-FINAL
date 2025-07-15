@@ -23,7 +23,6 @@ class ImagenMenu(QMainWindow):
         super().__init__()
         self.setWindowTitle("Menú - Visualizador de Imágenes DICOM")
         self.setGeometry(100, 100, 800, 600)
-        
         self.imagen_medica = None # Objeto para manejar la lógica DICOM
         self.procesador = None 
 
@@ -49,6 +48,11 @@ class ImagenMenu(QMainWindow):
         self.btn_procesar = QPushButton("Procesar imagen JPG/PNG")
         self.btn_procesar.clicked.connect(self.procesar_imagen)
         self.layout_controles.addWidget(self.btn_procesar)
+
+        #Botón que le da al usuario la opción de convertir la imagen a NIfTI
+        self.btn_convertir_nifti = QPushButton("Convertir a NIfTI")
+        self.btn_convertir_nifti.clicked.connect(self.convertir_a_nifti_y_guardar)
+        self.layout_controles.addWidget(self.btn_convertir_nifti)
 
         self.info_label = QLabel("")
         self.info_label.setWordWrap(True)
@@ -130,12 +134,12 @@ class ImagenMenu(QMainWindow):
 
     def seleccionar_carpeta(self):
         # QFileDialog.getExistingDirectory abre un diálogo nativo del sistema para que el usuario elija una carpeta.
-        carpeta = QFileDialog.getExistingDirectory(self, "Seleccionar carpeta DICOM")
-        if carpeta:
+        carpeta_actual = QFileDialog.getExistingDirectory(self, "Seleccionar carpeta DICOM")
+        if carpeta_actual:
             try:
-                self.carpeta_actual = carpeta
-                self.coordinador.seleccionar_archivo(carpeta)
-                self.coordinador.guardar_paciente(carpeta)
+                self.carpeta_actual = carpeta_actual
+                self.coordinador.seleccionar_archivo(carpeta_actual)
+                self.coordinador.guardar_paciente(carpeta_actual)
                 self.mostrar_info_y_controles()  # Activar los controles
                 QMessageBox.information(self, "Éxito", "Carpeta DICOM cargada correctamente.")
 
@@ -182,6 +186,18 @@ class ImagenMenu(QMainWindow):
             self.ax.axis('off')
             # canvas.draw() actualiza el lienzo, haciendo que el nuevo gráfico sea visible en la interfaz.
             self.canvas.draw()
+
+    def convertir_a_nifti_y_guardar(self): #conectar al controlador para poder convertir a nifti
+        carpeta_actual = QFileDialog.getExistingDirectory(self, "Seleccionar carpeta DICOM") #le pide al usuario que seleccione la carpeta DICOM
+        self.coordinador.seleccionar_archivo(carpeta_actual) #conecta a la función del controlador que selecciona la carpeta DICOM
+        carpeta_salida = QFileDialog.getExistingDirectory(self, "Seleccionar carpeta de salida para guardar el NIFTI")
+        if not carpeta_salida: #si el usuario no selecciona una carpeta, no se hace nada
+            return
+        try:
+            self.coordinador.convertir_a_nifti_y_guardar(carpeta_actual, carpeta_salida)
+            QMessageBox.information(self, "Éxito", "Conversión a NIfTI completada y guardada.")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"No se pudo convertir a NIfTI:\n{e}")
 
     def procesar_imagen(self):
         ruta, _ = QFileDialog.getOpenFileName(self, "Seleccionar imagen", "", "Imágenes (*.png *.jpg *.jpeg)")
