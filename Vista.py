@@ -2,7 +2,7 @@
 from PyQt5.QtWidgets import (
  QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QHBoxLayout, QMessageBox, QComboBox, QFileDialog, QTableWidget,
-    QTableWidgetItem, QSlider, QRadioButton, QButtonGroup, QGroupBox
+    QTableWidgetItem, QSlider, QRadioButton, QButtonGroup, QGroupBox, QStackedWidget
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
@@ -264,45 +264,62 @@ class SeñalMenu(QMainWindow):
         self.setWindowTitle("Menú - Señales")
         self.setGeometry(200, 200, 900, 700)
 
-        self.layout = QVBoxLayout()
+        self.coordinador = None
+        self.mat_viewer = None
+        self.csv_view = None
+
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        self.layout = QVBoxLayout(central_widget)
+
+        self.stack = QStackedWidget()
+        self.layout.addWidget(self.stack)
+
+        self.vista_inicial = QWidget()
+        layout_inicio = QVBoxLayout(self.vista_inicial)
         
         self.btn_mat = QPushButton("Abrir visualizador .mat")
         self.btn_mat.clicked.connect(self.abrir_mat_viewer)
-        self.layout.addWidget(self.btn_mat)
+        layout_inicio.addWidget(self.btn_mat)
 
         self.btn_csv = QPushButton("Visualizar CSV")
         self.btn_csv.clicked.connect(self.abrir_csv_view)
-        self.layout.addWidget(self.btn_csv)
+        layout_inicio.addWidget(self.btn_csv)
 
-        widget = QWidget()
-        widget.setLayout(self.layout)
-        self.setCentralWidget(widget)
+        self.stack.addWidget(self.vista_inicial)
+        self.stack.setCurrentWidget(self.vista_inicial)
 
-        self.btn_volver = QPushButton("Volver al Login")
-        self.btn_volver.setFixedHeight(30)  
-        self.btn_volver.setStyleSheet("""
+        self.mat_viewer = MatViewer()
+        self.agregar_boton_volver(self.mat_viewer)
+        self.stack.addWidget(self.mat_viewer)
+
+    def agregar_boton_volver(self, vista):
+        boton_volver =QPushButton("Volver al Login")
+        boton_volver.setFixedHeight(30)  
+        boton_volver.setStyleSheet("""
             QPushButton {  background-color: #007acc; color: white; border-radius: 4px; font-size: 12px; padding: 4px 8px;}
             QPushButton:hover { background-color: #005c99;   } """)
-        self.btn_volver.clicked.connect(self.volver_al_login)
-        self.layout.addWidget(self.btn_volver)
+        boton_volver.clicked.connect(lambda: self.stack.setCurrentWidget(self.vista_inicial))
+        layout = vista.layout
+        if layout:
+            layout.addWidget(boton_volver)
 
     def abrir_csv_view(self):
-        self.csv_view = CSVView()
-        self.csv_view.setControlador(self.coordinador) # se conecta el menu de señales con el coordinador 
-        self.csv_view.show()
+        if self.csv_view is None:
+            self.csv_view = CSVView()
+            self.csv_view.setControlador(self.coordinador)  # Coordinador se pasa aquí
+            self.agregar_boton_volver(self.csv_view)
+            self.stack.addWidget(self.csv_view)
+        self.stack.setCurrentWidget(self.csv_view)
 
     def abrir_mat_viewer(self):
-        self.mat_viewer = MatViewer()
-        self.mat_viewer.show()
-
-    def volver_al_login(self):
-        self.close()
-        self.login = LoginWindow()
-        self.login.asignarCoordinador(self.coordinador)
-        self.login.show()
+        self.stack.setCurrentWidget(self.mat_viewer)
 
     def setControlador(self, c):
         self.coordinador = c
+        if self.csv_view:
+            self.csv_view.setControlador(c)
+        
 class MatViewer(QWidget):
     def __init__(self):
         super().__init__()
