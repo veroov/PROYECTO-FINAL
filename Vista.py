@@ -379,7 +379,7 @@ class CSVView(QWidget):
 
             df = self.gestor_csv.obtener_datos()
             if df is not None:
-                self.mostrar_tabla()
+                self.mostrar_tabla(df)
                 self.llenar_combos()
 
         except Exception as e:
@@ -424,6 +424,8 @@ class CSVView(QWidget):
             self.canvas.draw()
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo graficar:\n{e}")
+    def setControlador(self,c):
+            self.coordinador = c
 
 class LoginWindow(QWidget):
     def __init__(self):
