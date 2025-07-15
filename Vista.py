@@ -12,7 +12,7 @@ from matplotlib.figure import Figure
 from scipy.io import loadmat
 import cv2
 from Modelo import coleccion_usuarios, coleccion_dicom
-from Modelo import ProcesadorImagen, GestorSeñales, GestorCSV  
+from Modelo import ProcesadorImagen, GestorSeñales, GestorCSV,Usuario  
 
 #Clase ImagenMenu 
 class ImagenMenu(QMainWindow):
