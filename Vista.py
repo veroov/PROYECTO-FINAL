@@ -1,18 +1,17 @@
-import sys
+
 from PyQt5.QtWidgets import (
-QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
+ QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QHBoxLayout, QMessageBox, QComboBox, QFileDialog, QTableWidget,
-    QTableWidgetItem, QSlider, QRadioButton, QButtonGroup, QGroupBox, QStackedWidget
+    QTableWidgetItem, QSlider, QRadioButton, QButtonGroup, QGroupBox
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
-import pandas as pd
 import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from scipy.io import loadmat
 import cv2
-from Modelo import coleccion_usuarios, coleccion_dicom
+from Modelo import coleccion_usuarios
 from Modelo import ProcesadorImagen, GestorSeñales, GestorCSV,Usuario  
 import os
 
@@ -26,6 +25,7 @@ class ImagenMenu(QMainWindow):
         self.setGeometry(100, 100, 800, 600)
         
         self.imagen_medica = None # Objeto para manejar la lógica DICOM
+        self.procesador = None 
 
         #Layout principal
         main_widget = QWidget()
@@ -117,12 +117,13 @@ class ImagenMenu(QMainWindow):
         self.layout_controles.addSpacing(15)  
         self.layout_controles.addWidget(self.btn_volver)
 
+        self.combo_accion.currentIndexChanged.connect(self.actualizar_imagen_procesada)
+
     def volver_al_login(self):
         self.close()
         self.login = LoginWindow()
         self.login.asignarCoordinador(self.coordinador)
         self.login.show()
-
 
     def setControlador(self,c):
         self.coordinador = c
@@ -188,25 +189,56 @@ class ImagenMenu(QMainWindow):
             return
 
         try:
+            self.procesador = ProcesadorImagen(ruta)
+            self.actualizar_imagen_procesada()
+
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"No se pudo cargar la imagen:\n{e}")
+
+    def actualizar_imagen_procesada(self):
+
+        if not self.procesador:
+            return 
+        
+        try:
             accion = self.combo_accion.currentText().lower()
-            img_procesada, conteo = self.coordinador.procesar_imagen(ruta, accion)
+            conteo = None
 
-            if accion == "contar":
-                QMessageBox.information(self, "Conteo de Células", f"Se detectaron {conteo} células.")
-                return
+            if accion == "gris":
+                img_procesada = self.procesador.cambiar_espacio_color("gris")
+            elif accion == "hsv":
+                img_procesada = self.procesador.cambiar_espacio_color("hsv")
+            elif accion == "ecualizar":
+                img_procesada = self.procesador.ecualizar()
+            elif accion == "binarizar":
+                img_procesada = self.procesador.binarizar()
+            elif accion == "apertura":
+                img_procesada = self.procesador.operacion_morfologica("apertura")
+            elif accion == "cierre":
+                img_procesada = self.procesador.operacion_morfologica("cierre")
+            elif accion == "invertir":
+                img_procesada = self.procesador.invertir_imagen()
+            elif accion == "contar":
+                conteo = self.procesador.contar_celulas()
+                img_procesada = self.procesador.binarizar()
 
-        # Mostrar en el canvas
             self.ax.clear()
-            if len(img_procesada.shape) == 2:  # blanco y negro
+            if len(img_procesada.shape) == 2:
                 self.ax.imshow(img_procesada, cmap='gray')
             else:
                 self.ax.imshow(cv2.cvtColor(img_procesada, cv2.COLOR_BGR2RGB))
+
             self.ax.set_title(f"Imagen procesada: {accion}")
             self.ax.axis('off')
             self.canvas.draw()
 
+            if conteo is not None:
+                QMessageBox.information(self, "Conteo de Células", f"Se detectaron {conteo} células.")
+
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo procesar la imagen:\n{e}")
+
+        
 
 
 
