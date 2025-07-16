@@ -535,6 +535,7 @@ class MatViewer(QWidget):
         self.layout.addWidget(self.combo_ensayo)
         self.layout.addWidget(QLabel("Canal:"))
         self.layout.addWidget(self.combo_canal)
+        self.layout.addWidget(self.btn_promedio)
 
     def cargar_mat(self):
         ruta, _ = QFileDialog.getOpenFileName(self, "Seleccionar archivo .mat", "", "Archivos MAT (*.mat)")
