@@ -305,10 +305,6 @@ class SeñalMenu(QMainWindow):
         self.stack.addWidget(self.vista_inicial)
         self.stack.setCurrentWidget(self.vista_inicial)
 
-        self.mat_viewer = MatViewer()
-        self.agregar_boton_volver(self.mat_viewer)
-        self.stack.addWidget(self.mat_viewer)
-
     def agregar_boton_volver(self, vista):
         boton_volver =QPushButton("Volver")
         boton_volver.setFixedHeight(30)  
@@ -329,6 +325,11 @@ class SeñalMenu(QMainWindow):
         self.stack.setCurrentWidget(self.csv_view)
 
     def abrir_mat_viewer(self):
+        if self.mat_viewer is None:
+            self.mat_viewer = MatViewer()
+            self.mat_viewer.setControlador(self.coordinador)
+            self.agregar_boton_volver(self.mat_viewer)
+            self.stack.addWidget(self.mat_viewer)
         self.stack.setCurrentWidget(self.mat_viewer)
 
     def volver_a_login(self):
@@ -419,6 +420,7 @@ class MatViewer(QWidget):
                return
             
             self.array = array
+            self.array_actual = array 
             ensayos, _, canales = array.shape
             self.combo_ensayo.clear()
             self.combo_ensayo.addItems([str(i) for i in range(ensayos)])
@@ -457,19 +459,23 @@ class MatViewer(QWidget):
             return
         try:
             # La Vista le pide el cálculo al Coordinador.
-            promedio = self.coordinador.calcular_promedio_eje1(self.array_actual)
+            promedio = np.mean(self.array, axis=(0, 1))
             
-            if promedio is not None:
-                self.ax.clear()
+            
+            self.ax.clear()
                 # Se utiliza ax.stem() para crear el gráfico de "palitos".
-                self.ax.stem(promedio)
-                self.ax.set_title("Promedio de Señal por Canal")
-                self.ax.set_xlabel("Canal")
-                self.ax.set_ylabel("Amplitud Promedio")
-                self.ax.grid(True)
-                self.canvas.draw()
+            self.ax.stem(promedio)
+            self.ax.set_title("Promedio de Señal por Canal")
+            self.ax.set_xlabel("Canal")
+            self.ax.set_ylabel("Amplitud Promedio")
+            self.ax.grid(True)
+            self.canvas.draw()
+            
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo calcular o graficar el promedio:\n{e}")
+
+    def setControlador(self, c):
+        self.coordinador = c
 
 class CSVView(QWidget):
     def __init__(self):
