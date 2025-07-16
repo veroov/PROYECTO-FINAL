@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QFileDialog, QTableWidgetItem, QApplication
 from Vista import *
 from Modelo import (
     Usuario, ImagenMedica, ProcesadorImagen, GestorSeñales, GestorCSV, RegistroArchivo,
-    coleccion_usuarios, coleccion_dicom, coleccion_archivos
+    coleccion_usuarios, coleccion_dicom, coleccion_archivos,Usuario 
 )
 from Vista import LoginWindow
 import sys
@@ -22,6 +22,9 @@ class Coordinador:
     def verificar_login(self, usuario, contraseña): #pasa como parametros el usuario y la contraseña 
         modelo = Usuario(usuario, contraseña, "", coleccion_usuarios)# crea un objeto Usuario con los datos ingresados
         return modelo.verificar() #devuelve el resultado de la verificación
+    def registrar_usuario(self, usuario, contraseña, rol):
+        nuevo = Usuario(usuario, contraseña, rol, coleccion_usuarios)
+        return nuevo.guardar()
 
       
 #selecciona la carpeta DICOM y carga los archivos DICOM en la base de datos
@@ -56,10 +59,6 @@ class Coordinador:
         return self.gestor_senales.obtener_senal(llave)    
 
     def calcular_promedio_eje1(self, array_3d):
-        """
-        Calcula el promedio a lo largo del eje 1 (muestras).
-        Devuelve un array 2D con la forma (ensayos, canales).
-        """
         if array_3d is None or array_3d.ndim != 3:
             return None
         # Se usa np.mean de NumPy con axis=1 para promediar sobre el eje de las muestras.
