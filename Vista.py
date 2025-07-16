@@ -155,7 +155,7 @@ class LoginWindow(QWidget):
         if not usuario or not contra:
             QMessageBox.warning(self, "Error", "Todos los campos son obligatorios.")
             return
-        nuevo = self.controlador.registrar_usuario(usuario, contra, rol)
+        nuevo = Usuario(usuario, contra, rol, coleccion_usuarios)
         exito, mensaje = nuevo.guardar()
         if exito:
             QMessageBox.information(self, "Éxito", mensaje)
@@ -275,10 +275,9 @@ class ImagenMenu(QMainWindow):
         self.layout_controles.addWidget(self.combo_accion)
 
         self.btn_volver = QPushButton("Volver al Login")
-
-        self.btn_volver.setFixedHeight(30)
+        self.btn_volver.setFixedHeight(40)
         self.btn_volver.setStyleSheet("""
-            QPushButton {background-color: #007acc; color: white; border-radius: 4px; font-size: 12px; padding: 4px 8px;}
+            QPushButton {background-color: #007acc; color: white; border-radius: 10px; font-size: 18px; padding: 4px 8px;}
             QPushButton:hover { background-color: #005c99; } """)
         self.btn_volver.clicked.connect(self.volver_al_login)
         self.layout_controles.addSpacing(15)  
