@@ -22,7 +22,8 @@ class Coordinador:
     def verificar_login(self, usuario, contraseña): #pasa como parametros el usuario y la contraseña 
         modelo = Usuario(usuario, contraseña, "", coleccion_usuarios)# crea un objeto Usuario con los datos ingresados
         return modelo.verificar() #devuelve el resultado de la verificación
-    
+
+      
 #selecciona la carpeta DICOM y carga los archivos DICOM en la base de datos
     def seleccionar_archivo(self, carpeta):
         self.imagen_medica = ImagenMedica(carpeta, coleccion_dicom)
@@ -54,6 +55,16 @@ class Coordinador:
     def obtener_senal(self, llave):
         return self.gestor_senales.obtener_senal(llave)    
 
+    def calcular_promedio_eje1(self, array_3d):
+        """
+        Calcula el promedio a lo largo del eje 1 (muestras).
+        Devuelve un array 2D con la forma (ensayos, canales).
+        """
+        if array_3d is None or array_3d.ndim != 3:
+            return None
+        # Se usa np.mean de NumPy con axis=1 para promediar sobre el eje de las muestras.
+        return np.mean(array_3d, axis=1)
+    
     def cargar_csv(self, ruta):
         self.modelo.cargar_csv(ruta)
         nombre = os.path.basename(ruta)

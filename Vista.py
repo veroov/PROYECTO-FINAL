@@ -340,16 +340,15 @@ class SeñalMenu(QMainWindow):
 
     def setControlador(self, c):
         self.coordinador = c
+
 class MatViewer(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Visualizador de archivo .mat")
         self.setGeometry(300, 300, 800, 600)
-         # Botón para calcular y graficar promedio tipo stem
-        self.btn_promedio = QPushButton("Calcular Promedio y Graficar Stem")
-        self.btn_promedio.clicked.connect(self.graficar_promedio_stem)
 
         self.layout = QVBoxLayout()
+        self.array_actual = None
         self.setLayout(self.layout)
 
         self.gestor = GestorSeñales()
@@ -368,15 +367,32 @@ class MatViewer(QWidget):
         self.layout.addWidget(QLabel("Selecciona una variable:"))
         self.layout.addWidget(self.combo_llaves)
 
+        controles_layout = QHBoxLayout()
+
         self.combo_ensayo = QComboBox()
         self.combo_canal = QComboBox()
         self.combo_ensayo.currentIndexChanged.connect(self.graficar)
         self.combo_canal.currentIndexChanged.connect(self.graficar)
+        
+        # Widget para los ComboBox de ensayo y canal
+        selector_widget = QWidget()
+        selector_layout = QVBoxLayout(selector_widget)
+        self.combo_ensayo = QComboBox()
+        self.combo_canal = QComboBox()
+        self.combo_ensayo.currentIndexChanged.connect(self.graficar)
+        self.combo_canal.currentIndexChanged.connect(self.graficar)
+        selector_layout.addWidget(QLabel("Ensayo:"))
+        selector_layout.addWidget(self.combo_ensayo)
+        selector_layout.addWidget(QLabel("Canal:"))
+        selector_layout.addWidget(self.combo_canal)
 
-        self.layout.addWidget(QLabel("Ensayo:"))
-        self.layout.addWidget(self.combo_ensayo)
-        self.layout.addWidget(QLabel("Canal:"))
-        self.layout.addWidget(self.combo_canal)
+        self.btn_promedio = QPushButton("Promedio por Canal (Stem)")
+        self.btn_promedio.clicked.connect(self.graficar_promedio_stem)
+
+        controles_layout.addWidget(selector_widget)
+        controles_layout.addWidget(self.btn_promedio)
+
+        self.layout.addLayout(controles_layout)
 
     def cargar_mat(self):
         ruta, _ = QFileDialog.getOpenFileName(self, "Seleccionar archivo .mat", "", "Archivos MAT (*.mat)")
@@ -394,10 +410,14 @@ class MatViewer(QWidget):
     def configurar_selector(self, llave):
         try:
             array = self.gestor.obtener_senal(llave)
+            if array is None:
+               QMessageBox.warning(self, "Advertencia", f"No se pudo obtener la señal para la variable '{llave}'.")
+               return
+            
             if array.ndim != 3:
-                QMessageBox.critical(self, "Error", f"La variable '{llave}' no tiene dimensiones [ensayos, muestras, canales].")
-                return
-
+               QMessageBox.critical(self, "Error", f"La variable '{llave}' no tiene dimensiones [ensayos, muestras, canales].")
+               return
+            
             self.array = array
             ensayos, _, canales = array.shape
             self.combo_ensayo.clear()
@@ -428,26 +448,29 @@ class MatViewer(QWidget):
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo graficar la señal:\n{e}")
+        
         #Clasificar promedio 
     def graficar_promedio_stem(self):
-        if self.array is None:
-            QMessageBox.warning(self, "Advertencia", "Primero debes cargar una señal válida.")
+        # Se verifica que haya un array cargado.
+        if self.array_actual is None:
+            QMessageBox.warning(self, "Advertencia", "Primero debes cargar un archivo .mat válido.")
             return
         try:
-        # Calcular el promedio sobre el eje 1 (muestras)
-            promedio = np.mean(self.array, axis=1).mean(axis=0)  # (ensayos, muestras, canales) → promedio por canal
-
-            self.ax.clear()
-            self.ax.stem(promedio)
-            self.ax.set_title("Promedio por Canal (Gráfico Stem)")
-            self.ax.set_xlabel("Canal")
-            self.ax.set_ylabel("Amplitud Promedio")
-            self.ax.grid(True)
-            self.canvas.draw()
-
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"No se pudo graficar el promedio:\n{e}")
+            # La Vista le pide el cálculo al Coordinador.
+            promedio = self.coordinador.calcular_promedio_eje1(self.array_actual)
             
+            if promedio is not None:
+                self.ax.clear()
+                # Se utiliza ax.stem() para crear el gráfico de "palitos".
+                self.ax.stem(promedio)
+                self.ax.set_title("Promedio de Señal por Canal")
+                self.ax.set_xlabel("Canal")
+                self.ax.set_ylabel("Amplitud Promedio")
+                self.ax.grid(True)
+                self.canvas.draw()
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"No se pudo calcular o graficar el promedio:\n{e}")
+
 class CSVView(QWidget):
     def __init__(self):
         super().__init__()
@@ -576,6 +599,7 @@ class LoginWindow(QWidget):
         self.btn_registro = QPushButton("Registrarse")
         self.btn_registro.clicked.connect(self.mostrar_registro)
         self.layout.addWidget(self.btn_registro)
+
     def mostrar_login(self):
         self.limpiar_layout()
         self.layout.addWidget(QLabel("Usuario:"))
