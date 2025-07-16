@@ -472,14 +472,10 @@ class MatViewer(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Visualizador de archivo .mat")
-<<<<<<< HEAD
         self.setGeometry(300, 300, 800, 600)
          # Botón para calcular y graficar promedio tipo stem
         self.btn_promedio = QPushButton("Calcular Promedio y Graficar Stem")
         self.btn_promedio.clicked.connect(self.graficar_promedio_stem)
-=======
-        self.setGeometry(200, 200, 900, 700)
->>>>>>> caa26cf45b1493d385e01aeaa4427c7f88736d3b
 
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
@@ -578,15 +574,8 @@ class MatViewer(QWidget):
             self.canvas.draw()
 
         except Exception as e:
-<<<<<<< HEAD
             QMessageBox.critical(self, "Error", f"No se pudo graficar el promedio:\n{e}")
             
-=======
-            QMessageBox.critical(self, "Error", f"No se pudo calcular o graficar el promedio:\n{e}")
-
-    def setControlador(self, c):
-        self.coordinador = c
->>>>>>> caa26cf45b1493d385e01aeaa4427c7f88736d3b
 class CSVView(QWidget):
     def __init__(self):
         super().__init__()
@@ -683,7 +672,6 @@ class CSVView(QWidget):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo graficar:\n{e}")
 
-<<<<<<< HEAD
 class LoginWindow(QWidget):
     def __init__(self):
         super().__init__()
@@ -799,6 +787,4 @@ class LoginWindow(QWidget):
         if hasattr(self.menu, "setControlador"):
             self.menu.setControlador(self.controlador)
         self.menu.show()
-=======
->>>>>>> caa26cf45b1493d385e01aeaa4427c7f88736d3b
 

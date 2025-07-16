@@ -90,19 +90,19 @@ class Coordinador:
         self.procesador = ProcesadorImagen(ruta)
 
         if accion == "gris":
-            return img := self.procesador.cambiar_espacio_color("gris")
+            img = self.procesador.cambiar_espacio_color("gris")
         elif accion == "hsv":
-            return img := self.procesador.cambiar_espacio_color("hsv")
+            img = self.procesador.cambiar_espacio_color("hsv")
         elif accion == "ecualizar":
-            return img := self.procesador.ecualizar()
+            img = self.procesador.ecualizar()
         elif accion == "binarizar":
-            return img := self.procesador.binarizar(umbral=umbral)
+            img = self.procesador.binarizar(umbral=umbral)
         elif accion == "apertura":
-            return img := self.procesador.operacion_morfologica("apertura", tam_kernel=tam_kernel)
+            img = self.procesador.operacion_morfologica("apertura", tam_kernel=tam_kernel)
         elif accion == "cierre":
-            return img := self.procesador.operacion_morfologica("cierre", tam_kernel=tam_kernel)
+            img = self.procesador.operacion_morfologica("cierre", tam_kernel=tam_kernel)
         elif accion == "invertir":
-            return img := self.procesador.invertir_imagen()
+            img = self.procesador.invertir_imagen()
         elif accion == "contar":
             total = self.procesador.contar_celulas()
             return None, total  # Solo retorna el conteo
