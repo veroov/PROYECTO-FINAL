@@ -155,7 +155,7 @@ class LoginWindow(QWidget):
         if not usuario or not contra:
             QMessageBox.warning(self, "Error", "Todos los campos son obligatorios.")
             return
-        nuevo = Usuario(usuario, contra, rol, coleccion_usuarios)
+        nuevo = self.controlador.registrar_usuario(usuario, contra, rol)
         exito, mensaje = nuevo.guardar()
         if exito:
             QMessageBox.information(self, "Éxito", mensaje)
