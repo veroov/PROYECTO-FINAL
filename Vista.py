@@ -318,8 +318,10 @@ class ImagenMenu(QMainWindow):
             info_texto += f"<b>{clave}:</b> {valor}<br>"
         self.info_label.setText(info_texto)
         
+        self.info_label.show()
         self.dicom_controls_group.setVisible(True) # Mostrar controles
         self.btn_cargar.setText("Cargar otra carpeta") # Cambiar texto del botón
+        self.btn_convertir_nifti.show()
 
     def actualizar_plano(self):
         eje_actual = self.eje_group.checkedId()
@@ -365,10 +367,11 @@ class ImagenMenu(QMainWindow):
 
     def procesar_imagen(self):
         ruta, _ = QFileDialog.getOpenFileName(self, "Seleccionar imagen", "", "Imágenes (*.png *.jpg *.jpeg)")
-        self.label_accion.setVisible(True)
-        self.combo_accion.setVisible(True)
         if not ruta:
             return
+    
+        self.ocultar_controles_dicom()              
+        self.mostrar_controles_procesamiento()  
 
         try:
             self.procesador = ProcesadorImagen(ruta)
@@ -418,6 +421,14 @@ class ImagenMenu(QMainWindow):
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo procesar la imagen:\n{e}")
+        
+    def ocultar_controles_dicom(self):
+        self.dicom_controls_group.hide()
+        self.info_label.hide()
+
+    def mostrar_controles_procesamiento(self):
+        self.label_accion.setVisible(True)
+        self.combo_accion.setVisible(True)
 
 class SeñalMenu(QMainWindow):
     def __init__(self):
