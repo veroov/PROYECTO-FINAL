@@ -496,6 +496,9 @@ class CSVView(QWidget):
         self.combo_x.addItems(columnas)
         self.combo_y.addItems(columnas)
 
+    def setControlador(self,c):
+            self.coordinador = c
+
     def graficar(self):
         x_col = self.combo_x.currentText()
         y_col = self.combo_y.currentText()
@@ -515,8 +518,6 @@ class CSVView(QWidget):
             self.canvas.draw()
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo graficar:\n{e}")
-    def setControlador(self,c):
-            self.coordinador = c
 
 class LoginWindow(QWidget):
     def __init__(self):
