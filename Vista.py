@@ -2,7 +2,7 @@
 from PyQt5.QtWidgets import (
  QMainWindow, QWidget, QLabel, QLineEdit, QPushButton,
     QVBoxLayout, QHBoxLayout, QMessageBox, QComboBox, QFileDialog, QTableWidget,
-    QTableWidgetItem, QSlider, QRadioButton, QButtonGroup, QGroupBox
+    QTableWidgetItem, QSlider, QRadioButton, QButtonGroup, QGroupBox, QStackedWidget
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
@@ -265,49 +265,76 @@ class ImagenMenu(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo procesar la imagen:\n{e}")
 
-        
-
-
-
 class SeñalMenu(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Menú - Señales")
         self.setGeometry(200, 200, 900, 700)
 
-        self.layout = QVBoxLayout()
+        self.coordinador = None
+        self.mat_viewer = None
+        self.csv_view = None
+
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        self.layout = QVBoxLayout(central_widget)
+
+        self.stack = QStackedWidget()
+        self.layout.addWidget(self.stack)
+
+        self.vista_inicial = QWidget()
+        layout_inicio = QVBoxLayout(self.vista_inicial)
         
         self.btn_mat = QPushButton("Abrir visualizador .mat")
         self.btn_mat.clicked.connect(self.abrir_mat_viewer)
-        self.layout.addWidget(self.btn_mat)
+        layout_inicio.addWidget(self.btn_mat)
 
         self.btn_csv = QPushButton("Visualizar CSV")
         self.btn_csv.clicked.connect(self.abrir_csv_view)
-        self.layout.addWidget(self.btn_csv)
-
-        widget = QWidget()
-        widget.setLayout(self.layout)
-        self.setCentralWidget(widget)
+        layout_inicio.addWidget(self.btn_csv)
 
         self.btn_volver = QPushButton("Volver al Login")
-        self.btn_volver.setFixedHeight(30)  
+        self.btn_volver.setFixedHeight(30)
         self.btn_volver.setStyleSheet("""
+            QPushButton { background-color: #007acc; color: white; border-radius: 4px; font-size: 12px; padding: 4px 8px; }
+            QPushButton:hover { background-color: #005c99; }
+        """)
+        self.btn_volver.clicked.connect(self.volver_a_login)
+        layout_inicio.addWidget(self.btn_volver)
+
+        self.stack.addWidget(self.vista_inicial)
+        self.stack.setCurrentWidget(self.vista_inicial)
+
+    def agregar_boton_volver(self, vista):
+        boton_volver =QPushButton("Volver")
+        boton_volver.setFixedHeight(30)  
+        boton_volver.setStyleSheet("""
             QPushButton {  background-color: #007acc; color: white; border-radius: 4px; font-size: 12px; padding: 4px 8px;}
             QPushButton:hover { background-color: #005c99;   } """)
-        self.btn_volver.clicked.connect(self.volver_al_login)
-        self.layout.addWidget(self.btn_volver)
+        boton_volver.clicked.connect(lambda: self.stack.setCurrentWidget(self.vista_inicial))
+        layout = vista.layout
+        if layout:
+            layout.addWidget(boton_volver)
 
     def abrir_csv_view(self):
-        self.csv_view = CSVView()
-        self.csv_view.setControlador(self.coordinador) # se conecta el menu de señales con el coordinador 
-        self.csv_view.show()
+        if self.csv_view is None:
+            self.csv_view = CSVView()
+            self.csv_view.setControlador(self.coordinador)  # Coordinador se pasa aquí
+            self.agregar_boton_volver(self.csv_view)
+            self.stack.addWidget(self.csv_view)
+        self.stack.setCurrentWidget(self.csv_view)
 
     def abrir_mat_viewer(self):
-        self.mat_viewer = MatViewer()
-        self.mat_viewer.show()
+        if self.mat_viewer is None:
+            self.mat_viewer = MatViewer()
+            self.mat_viewer.setControlador(self.coordinador)
+            self.agregar_boton_volver(self.mat_viewer)
+            self.stack.addWidget(self.mat_viewer)
+        self.stack.setCurrentWidget(self.mat_viewer)
 
-    def volver_al_login(self):
+    def volver_a_login(self):
         self.close()
+        from Vista import LoginWindow  
         self.login = LoginWindow()
         self.login.asignarCoordinador(self.coordinador)
         self.login.show()
@@ -320,11 +347,9 @@ class MatViewer(QWidget):
         super().__init__()
         self.setWindowTitle("Visualizador de archivo .mat")
         self.setGeometry(300, 300, 800, 600)
-         # Botón para calcular y graficar promedio tipo stem
-        self.btn_promedio = QPushButton("Calcular Promedio y Graficar Stem")
-        self.btn_promedio.clicked.connect(self.graficar_promedio_stem)
 
         self.layout = QVBoxLayout()
+        self.array_actual = None
         self.setLayout(self.layout)
 
         self.gestor = GestorSeñales()
@@ -343,15 +368,32 @@ class MatViewer(QWidget):
         self.layout.addWidget(QLabel("Selecciona una variable:"))
         self.layout.addWidget(self.combo_llaves)
 
+        controles_layout = QHBoxLayout()
+
         self.combo_ensayo = QComboBox()
         self.combo_canal = QComboBox()
         self.combo_ensayo.currentIndexChanged.connect(self.graficar)
         self.combo_canal.currentIndexChanged.connect(self.graficar)
+        
+        # Widget para los ComboBox de ensayo y canal
+        selector_widget = QWidget()
+        selector_layout = QVBoxLayout(selector_widget)
+        self.combo_ensayo = QComboBox()
+        self.combo_canal = QComboBox()
+        self.combo_ensayo.currentIndexChanged.connect(self.graficar)
+        self.combo_canal.currentIndexChanged.connect(self.graficar)
+        selector_layout.addWidget(QLabel("Ensayo:"))
+        selector_layout.addWidget(self.combo_ensayo)
+        selector_layout.addWidget(QLabel("Canal:"))
+        selector_layout.addWidget(self.combo_canal)
 
-        self.layout.addWidget(QLabel("Ensayo:"))
-        self.layout.addWidget(self.combo_ensayo)
-        self.layout.addWidget(QLabel("Canal:"))
-        self.layout.addWidget(self.combo_canal)
+        self.btn_promedio = QPushButton("Promedio por Canal (Stem)")
+        self.btn_promedio.clicked.connect(self.graficar_promedio_stem)
+
+        controles_layout.addWidget(selector_widget)
+        controles_layout.addWidget(self.btn_promedio)
+
+        self.layout.addLayout(controles_layout)
 
     def cargar_mat(self):
         ruta, _ = QFileDialog.getOpenFileName(self, "Seleccionar archivo .mat", "", "Archivos MAT (*.mat)")
@@ -369,11 +411,16 @@ class MatViewer(QWidget):
     def configurar_selector(self, llave):
         try:
             array = self.gestor.obtener_senal(llave)
+            if array is None:
+               QMessageBox.warning(self, "Advertencia", f"No se pudo obtener la señal para la variable '{llave}'.")
+               return
+            
             if array.ndim != 3:
-                QMessageBox.critical(self, "Error", f"La variable '{llave}' no tiene dimensiones [ensayos, muestras, canales].")
-                return
-
+               QMessageBox.critical(self, "Error", f"La variable '{llave}' no tiene dimensiones [ensayos, muestras, canales].")
+               return
+            
             self.array = array
+            self.array_actual = array 
             ensayos, _, canales = array.shape
             self.combo_ensayo.clear()
             self.combo_ensayo.addItems([str(i) for i in range(ensayos)])
@@ -403,26 +450,33 @@ class MatViewer(QWidget):
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo graficar la señal:\n{e}")
+        
         #Clasificar promedio 
     def graficar_promedio_stem(self):
-        if self.array is None:
-            QMessageBox.warning(self, "Advertencia", "Primero debes cargar una señal válida.")
+        # Se verifica que haya un array cargado.
+        if self.array_actual is None:
+            QMessageBox.warning(self, "Advertencia", "Primero debes cargar un archivo .mat válido.")
             return
         try:
-        # Calcular el promedio sobre el eje 1 (muestras)
-            promedio = np.mean(self.array, axis=1).mean(axis=0)  # (ensayos, muestras, canales) → promedio por canal
-
+            # La Vista le pide el cálculo al Coordinador.
+            promedio = np.mean(self.array, axis=(0, 1))
+            
+            
             self.ax.clear()
+                # Se utiliza ax.stem() para crear el gráfico de "palitos".
             self.ax.stem(promedio)
-            self.ax.set_title("Promedio por Canal (Gráfico Stem)")
+            self.ax.set_title("Promedio de Señal por Canal")
             self.ax.set_xlabel("Canal")
             self.ax.set_ylabel("Amplitud Promedio")
             self.ax.grid(True)
             self.canvas.draw()
-
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"No se pudo graficar el promedio:\n{e}")
             
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"No se pudo calcular o graficar el promedio:\n{e}")
+
+    def setControlador(self, c):
+        self.coordinador = c
+
 class CSVView(QWidget):
     def __init__(self):
         super().__init__()
@@ -538,7 +592,7 @@ class LoginWindow(QWidget):
 
         logo = QLabel()
         ruta_logo = os.path.join("logo", "logo.png")
-        logo.setPixmap(QPixmap(ruta_logo).scaled(100, 100, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        logo.setPixmap(QPixmap(ruta_logo).scaled(160, 160, Qt.KeepAspectRatio, Qt.SmoothTransformation))
         logo.setAlignment(Qt.AlignCenter)
         self.layout.addWidget(logo)
 
@@ -552,6 +606,7 @@ class LoginWindow(QWidget):
         self.btn_registro = QPushButton("Registrarse")
         self.btn_registro.clicked.connect(self.mostrar_registro)
         self.layout.addWidget(self.btn_registro)
+
     def mostrar_login(self):
         self.limpiar_layout()
         self.layout.addWidget(QLabel("Usuario:"))
