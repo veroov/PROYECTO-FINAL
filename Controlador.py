@@ -56,10 +56,6 @@ class Coordinador:
         return self.gestor_senales.obtener_senal(llave)    
 
     def calcular_promedio_eje1(self, array_3d):
-        """
-        Calcula el promedio a lo largo del eje 1 (muestras).
-        Devuelve un array 2D con la forma (ensayos, canales).
-        """
         if array_3d is None or array_3d.ndim != 3:
             return None
         # Se usa np.mean de NumPy con axis=1 para promediar sobre el eje de las muestras.

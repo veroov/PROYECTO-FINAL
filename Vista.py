@@ -15,6 +15,155 @@ from Modelo import coleccion_usuarios
 from Modelo import ProcesadorImagen, GestorSeñales, GestorCSV,Usuario  
 import os
 
+class LoginWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("GenEraVid Viewer")
+        self.setGeometry(300, 300, 600, 600)
+        self.setStyleSheet("""
+            QWidget { background: white; font-family: Arial; font-size: 14px; }
+            QPushButton {background: #4da6ff; color: white; border-radius: 5px; padding: 6px;}
+            QPushButton:hover { background: #3399ff; }
+            QLineEdit, QComboBox { border: 1px solid lightgray; border-radius: 4px; padding: 4px;}
+        """)
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+        self.mostrar_opciones_iniciales()
+
+    def mostrar_opciones_iniciales(self):
+
+        logo = QLabel()
+        ruta_logo = os.path.join("logo", "logo.png")
+        logo.setPixmap(QPixmap(ruta_logo).scaled(300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        logo.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(logo)
+
+        titulo = QLabel("Bienvenido a GenEraVid")
+        titulo.setStyleSheet("font-size: 40px; font-weight: bold; color: #2c3e50;")
+        titulo.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(titulo)
+        self.btn_login = QPushButton("Iniciar Sesión")
+        self.btn_login.clicked.connect(self.mostrar_login)
+        self.btn_login.setFixedHeight(40)
+        self.btn_login.setFixedWidth(700)
+        self.btn_login.setStyleSheet("font-size: 18px;")
+        self.layout.addWidget(self.btn_login, alignment=Qt.AlignHCenter)
+        self.btn_registro = QPushButton("Registrarse")
+        self.btn_registro.clicked.connect(self.mostrar_registro)
+        self.btn_registro.setFixedHeight(40)
+        self.btn_registro.setFixedWidth(700)
+        self.btn_registro.setStyleSheet("font-size: 18px;")
+        self.layout.addWidget(self.btn_registro, alignment=Qt.AlignHCenter)
+
+    def mostrar_login(self):
+        self.limpiar_layout()
+
+        label_usuario = QLabel("Usuario:")
+        label_usuario.setStyleSheet("font-size: 14px;")
+        self.layout.addWidget(label_usuario)
+
+        self.input_usuario = QLineEdit()
+        self.input_usuario.setFixedWidth(800)
+        self.input_usuario.setStyleSheet("font-size: 20px; padding: 6px;")
+        self.layout.addWidget(self.input_usuario, alignment=Qt.AlignHCenter)
+
+        self.layout.addSpacing(10)
+
+        label_contra = QLabel("Contraseña:")
+        label_contra.setStyleSheet("font-size: 14px;")
+        self.layout.addWidget(label_contra)
+
+        self.input_contra = QLineEdit()
+        self.input_contra.setEchoMode(QLineEdit.Password)
+        self.input_contra.setFixedWidth(800)
+        self.input_contra.setStyleSheet("font-size: 20px; padding: 6px;")
+        self.layout.addWidget(self.input_contra, alignment=Qt.AlignHCenter)
+
+        self.layout.addSpacing(15)
+
+        btn_confirmar = QPushButton("Entrar")
+        btn_confirmar.setFixedWidth(200)
+        btn_confirmar.setStyleSheet("font-size: 14px;")
+        btn_confirmar.clicked.connect(self.verificar_login)
+        self.layout.addWidget(btn_confirmar, alignment=Qt.AlignHCenter)
+
+        btn_volver = QPushButton("Volver")
+        btn_volver.setFixedWidth(200)
+        btn_volver.setStyleSheet("font-size: 14px;")
+        btn_volver.clicked.connect(self.reiniciar)
+        self.layout.addWidget(btn_volver, alignment=Qt.AlignHCenter)
+
+    def mostrar_registro(self):
+        self.limpiar_layout()
+        self.layout.addWidget(QLabel("Nuevo usuario:"))
+        self.input_usuario = QLineEdit()
+        self.layout.addWidget(self.input_usuario)
+        self.layout.addWidget(QLabel("Contraseña:"))
+        self.input_contra = QLineEdit()
+        self.input_contra.setEchoMode(QLineEdit.Password)
+        self.layout.addWidget(self.input_contra)
+        self.layout.addWidget(QLabel("Rol:"))
+        self.combo_rol = QComboBox()
+        self.combo_rol.addItems(["imagenes", "señales"])
+        self.layout.addWidget(self.combo_rol)
+        btn_guardar = QPushButton("Registrar")
+        btn_guardar.clicked.connect(self.registrar_usuario)
+        self.layout.addWidget(btn_guardar)
+        btn_volver = QPushButton("Volver")
+        btn_volver.clicked.connect(self.reiniciar)
+        self.layout.addWidget(btn_volver)
+
+    def limpiar_layout(self):
+        while self.layout.count():
+            widget = self.layout.takeAt(0).widget()
+            if widget:
+                widget.deleteLater()
+
+    def reiniciar(self):
+        self.limpiar_layout()
+        self.mostrar_opciones_iniciales()
+
+    def asignarCoordinador(self,c):
+        self.controlador = c
+
+    def verificar_login(self):
+        username = self.input_usuario.text().strip() 
+        password = self.input_contra.text().strip()
+        valido, rol = self.controlador.verificar_login(username, password) #verifica credenciales y lo manda al controlador
+        if valido: #si es valido va a asiganarle un rol
+            rol = rol.strip().lower()
+            if rol == "imagenes":
+                self.abrir_menu(ImagenMenu)
+            elif rol == "señales":
+                self.abrir_menu(SeñalMenu)
+            else:
+                QMessageBox.warning(self, "Error", f"Rol desconocido: {rol}")
+        else:
+            QMessageBox.critical(self, "Error", "Credenciales incorrectas.")
+
+    def registrar_usuario(self):
+        usuario = self.input_usuario.text().strip()
+        contra = self.input_contra.text().strip()
+        rol = self.combo_rol.currentText()
+        if not usuario or not contra:
+            QMessageBox.warning(self, "Error", "Todos los campos son obligatorios.")
+            return
+        nuevo = Usuario(usuario, contra, rol, coleccion_usuarios)
+        exito, mensaje = nuevo.guardar()
+        if exito:
+            QMessageBox.information(self, "Éxito", mensaje)
+            self.reiniciar()
+        else:
+            QMessageBox.warning(self, "Error", mensaje)
+
+    def abrir_menu(self, ventana_clase):
+        self.hide()
+        # Guardamos la referencia a la nueva ventana para que no sea eliminada por el recolector de basura
+        self.menu = ventana_clase()
+        if hasattr(self.menu, "setControlador"):
+            self.menu.setControlador(self.controlador)
+        self.menu.show()
+
 #Clase ImagenMenu 
 class ImagenMenu(QMainWindow):
     def __init__(self):
@@ -207,7 +356,6 @@ class ImagenMenu(QMainWindow):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo convertir a NIfTI:\n{e}")
 
-
     def procesar_imagen(self):
         ruta, _ = QFileDialog.getOpenFileName(self, "Seleccionar imagen", "", "Imágenes (*.png *.jpg *.jpeg)")
         self.label_accion.setVisible(True)
@@ -223,7 +371,6 @@ class ImagenMenu(QMainWindow):
             QMessageBox.critical(self, "Error", f"No se pudo cargar la imagen:\n{e}")
 
     def actualizar_imagen_procesada(self):
-
         if not self.procesador:
             return 
         
@@ -341,7 +488,6 @@ class SeñalMenu(QMainWindow):
 
     def setControlador(self, c):
         self.coordinador = c
-
 class MatViewer(QWidget):
     def __init__(self):
         super().__init__()
@@ -470,13 +616,12 @@ class MatViewer(QWidget):
             self.ax.set_ylabel("Amplitud Promedio")
             self.ax.grid(True)
             self.canvas.draw()
-            
+
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo calcular o graficar el promedio:\n{e}")
 
     def setControlador(self, c):
         self.coordinador = c
-
 class CSVView(QWidget):
     def __init__(self):
         super().__init__()
@@ -569,123 +714,6 @@ class CSVView(QWidget):
             self.canvas.draw()
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo graficar:\n{e}")
+
     def setControlador(self,c):
             self.coordinador = c
-
-class LoginWindow(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("GenEraVid Viewer")
-        self.setGeometry(150, 150, 300, 300)
-        self.setStyleSheet("""
-            QWidget { background: white; font-family: Arial; font-size: 14px; }
-            QPushButton {background: #4da6ff; color: white; border-radius: 5px; padding: 6px;}
-            QPushButton:hover { background: #3399ff; }
-            QLineEdit, QComboBox { border: 1px solid lightgray; border-radius: 4px; padding: 4px;}
-        """)
-        self.layout = QVBoxLayout()
-        self.setLayout(self.layout)
-        self.mostrar_opciones_iniciales()
-
-    def mostrar_opciones_iniciales(self):
-
-        logo = QLabel()
-        ruta_logo = os.path.join("logo", "logo.png")
-        logo.setPixmap(QPixmap(ruta_logo).scaled(160, 160, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-        logo.setAlignment(Qt.AlignCenter)
-        self.layout.addWidget(logo)
-
-        titulo = QLabel("Bienvenido a GenEraVid")
-        titulo.setStyleSheet("font-size: 20px; font-weight: bold; color: #2c3e50;")
-        titulo.setAlignment(Qt.AlignCenter)
-        self.layout.addWidget(titulo)
-        self.btn_login = QPushButton("Iniciar Sesión")
-        self.btn_login.clicked.connect(self.mostrar_login)
-        self.layout.addWidget(self.btn_login)
-        self.btn_registro = QPushButton("Registrarse")
-        self.btn_registro.clicked.connect(self.mostrar_registro)
-        self.layout.addWidget(self.btn_registro)
-
-    def mostrar_login(self):
-        self.limpiar_layout()
-        self.layout.addWidget(QLabel("Usuario:"))
-        self.input_usuario = QLineEdit()
-        self.layout.addWidget(self.input_usuario)
-        self.layout.addWidget(QLabel("Contraseña:"))
-        self.input_contra = QLineEdit()
-        self.input_contra.setEchoMode(QLineEdit.Password)
-        self.layout.addWidget(self.input_contra)
-        btn_confirmar = QPushButton("Entrar")
-        btn_confirmar.clicked.connect(self.verificar_login)
-        self.layout.addWidget(btn_confirmar)
-        btn_volver = QPushButton("Volver")
-        btn_volver.clicked.connect(self.reiniciar)
-        self.layout.addWidget(btn_volver)
-    def mostrar_registro(self):
-        self.limpiar_layout()
-        self.layout.addWidget(QLabel("Nuevo usuario:"))
-        self.input_usuario = QLineEdit()
-        self.layout.addWidget(self.input_usuario)
-        self.layout.addWidget(QLabel("Contraseña:"))
-        self.input_contra = QLineEdit()
-        self.input_contra.setEchoMode(QLineEdit.Password)
-        self.layout.addWidget(self.input_contra)
-        self.layout.addWidget(QLabel("Rol:"))
-        self.combo_rol = QComboBox()
-        self.combo_rol.addItems(["imagenes", "señales"])
-        self.layout.addWidget(self.combo_rol)
-        btn_guardar = QPushButton("Registrar")
-        btn_guardar.clicked.connect(self.registrar_usuario)
-        self.layout.addWidget(btn_guardar)
-        btn_volver = QPushButton("Volver")
-        btn_volver.clicked.connect(self.reiniciar)
-        self.layout.addWidget(btn_volver)
-    def limpiar_layout(self):
-        while self.layout.count():
-            widget = self.layout.takeAt(0).widget()
-            if widget:
-                widget.deleteLater()
-    def reiniciar(self):
-        self.limpiar_layout()
-        self.mostrar_opciones_iniciales()
-
-    def asignarCoordinador(self,c):
-        self.controlador = c
-
-    def verificar_login(self):
-        username = self.input_usuario.text().strip() 
-        password = self.input_contra.text().strip()
-        valido, rol = self.controlador.verificar_login(username, password) #verifica credenciales y lo manda al controlador
-        if valido: #si es valido va a asiganarle un rol
-            rol = rol.strip().lower()
-            if rol == "imagenes":
-                self.abrir_menu(ImagenMenu)
-            elif rol == "señales":
-                self.abrir_menu(SeñalMenu)
-            else:
-                QMessageBox.warning(self, "Error", f"Rol desconocido: {rol}")
-        else:
-            QMessageBox.critical(self, "Error", "Credenciales incorrectas.")
-
-    def registrar_usuario(self):
-        usuario = self.input_usuario.text().strip()
-        contra = self.input_contra.text().strip()
-        rol = self.combo_rol.currentText()
-        if not usuario or not contra:
-            QMessageBox.warning(self, "Error", "Todos los campos son obligatorios.")
-            return
-        nuevo = Usuario(usuario, contra, rol, coleccion_usuarios)
-        exito, mensaje = nuevo.guardar()
-        if exito:
-            QMessageBox.information(self, "Éxito", mensaje)
-            self.reiniciar()
-        else:
-            QMessageBox.warning(self, "Error", mensaje)
-    def abrir_menu(self, ventana_clase):
-        self.hide()
-        # Guardamos la referencia a la nueva ventana para que no sea eliminada por el recolector de basura
-        self.menu = ventana_clase()
-        if hasattr(self.menu, "setControlador"):
-            self.menu.setControlador(self.controlador)
-        self.menu.show()
-
